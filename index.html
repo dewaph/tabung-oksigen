@@ -126,11 +126,22 @@ dialog{margin:auto auto 0;max-width:none;width:100%;border-radius:16px 16px 0 0}
 <dialog id="dlg3">
 <h2>Scan barcode tabung</h2>
 <div id="rd" style="width:100%;min-height:180px;border-radius:8px;overflow:hidden;background:#000"></div>
-<p class="note" id="sinfo">Arahkan kamera ke barcode. Setiap hasil scan masuk ke kotak nomor tabung.</p>
+<p class="note" id="sinfo">Arahkan kamera ke barcode. Setelah terbaca, akan muncul jendela untuk menambahkan tabung.</p>
 <label for="sfile">Atau ambil/pilih foto barcode</label>
 <input type="file" id="sfile" accept="image/*" capture="environment">
 <div id="rdf" style="display:none"></div>
 <div class="acts" style="margin-top:14px;justify-content:flex-end"><button class="p" id="stutup">Selesai</button></div>
+</dialog>
+
+<dialog id="dlg4">
+<h2>Tambahkan tabung ini?</h2>
+<p class="note">Barcode terbaca:</p>
+<div id="sc-no" style="font-size:28px;font-weight:700;margin:2px 0 8px;word-break:break-all"></div>
+<label for="ssup">Supplier</label><input id="ssup" placeholder="Nama supplier">
+<label for="stgl2">Tanggal diterima</label><input type="date" id="stgl2">
+<p class="note" id="sbts"></p>
+<div class="acts" style="margin-top:14px;justify-content:flex-end"><button id="sbat2">Batal</button><button class="p" id="stam">Tambahkan</button></div>
+<div id="serr2" class="msg"></div>
 </dialog>
 
 <dialog id="dlg2">
@@ -244,15 +255,39 @@ $("sim").onclick=function(){
  cur.status="mandor";cur.mandor=m;cur.spk=s;cur.lokasi=$("lok").value.trim();save(cur);$("dlg").close();render();
 };
 var sc=null,last="",lastT=0,added=0;
+var lastSup="",blockCode="",blockUntil=0;
+try{lastSup=localStorage.getItem("tabung_sup")||""}catch(e){}
+function nomorAktif(n){var k=n.toLowerCase();return items.some(function(x){return x.status!=="kembali"&&x.nomor.toLowerCase()===k})}
+function previewBatas(){var t=$("stgl2").value;$("sbts").textContent=t?"Batas kembali: "+fmt(plus1m(t)):""}
 function addNo(code){
  code=String(code||"").trim();if(!code)return;
- var now=Date.now();if(code===last&&now-lastT<3000)return;last=code;lastT=now;
- var ex=$("nos").value.split(/[\n,;]+/).map(function(s){return s.trim().toLowerCase()});
- if(ex.indexOf(code.toLowerCase())>=0){$("sinfo").textContent="Sudah ada di daftar: "+code;return}
- $("nos").value=($("nos").value.trim()?$("nos").value.replace(/\s+$/,"")+"\n":"")+code;
- added++;$("sinfo").textContent="Berhasil scan: "+code+" ("+added+" nomor). Arahkan ke barcode berikutnya atau tekan Selesai.";
+ if($("dlg4").open)return;
+ var now=Date.now();
+ if(code===blockCode&&now<blockUntil)return;
+ if(code===last&&now-lastT<3000)return;
+ last=code;lastT=now;
+ if(nomorAktif(code)){$("sinfo").textContent="Tabung "+code+" sudah ada di daftar aktif.";if(navigator.vibrate)navigator.vibrate([60,60,60]);return}
  if(navigator.vibrate)navigator.vibrate(80);
+ $("sc-no").textContent=code;
+ $("ssup").value=$("sup").value.trim()||lastSup;
+ $("stgl2").value=$("tgl").value||today();
+ show("serr2","");previewBatas();
+ $("dlg4").showModal();
 }
+$("stgl2").onchange=previewBatas;$("stgl2").oninput=previewBatas;
+$("sbat2").onclick=function(){$("dlg4").close()};
+$("dlg4").addEventListener("close",function(){blockCode=$("sc-no").textContent;blockUntil=Date.now()+6000});
+$("stam").onclick=function(){
+ var n=$("sc-no").textContent,sp=$("ssup").value.trim(),tg=$("stgl2").value;
+ if(!sp)return show("serr2","Nama supplier wajib diisi.");
+ if(!tg)return show("serr2","Isi tanggal diterima.");
+ if(nomorAktif(n))return show("serr2","Tabung "+n+" sudah ada di daftar aktif.");
+ var x={id:uid(),nomor:n,diterima:tg,batas:plus1m(tg),supplier:sp,status:"gudang",mandor:"",spk:"",lokasi:"",kembali:""};
+ items.push(x);addRows([x]);render();
+ lastSup=sp;try{localStorage.setItem("tabung_sup",sp)}catch(e){}
+ added++;$("sinfo").textContent="Tabung "+n+" ditambahkan ("+added+" tabung). Arahkan ke barcode berikutnya.";
+ $("dlg4").close();
+};
 function stopSc(){var s=sc;sc=null;if(!s)return Promise.resolve();try{return s.stop().catch(function(){})}catch(e){return Promise.resolve()}}
 $("scan").onclick=function(){
  added=0;last="";$("dlg3").showModal();
