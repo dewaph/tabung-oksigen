@@ -338,7 +338,7 @@ $("sfile").onchange=function(){
 };
 $("stutup").onclick=function(){stopSc().then(function(){$("dlg3").close()})};
 $("dlg3").addEventListener("close",function(){stopSc()});
-function QB(w,h){return {width:Math.floor(w*.92),height:Math.floor(Math.max(120,Math.min(h*.7,w*.55)))}}
+function QB(w,h){var s=Math.floor(Math.min(w,h)*.9);return {width:s,height:s}}
 var torchOn={};
 function resetTorch(id,bid){torchOn[id]=false;$(bid).textContent="🔦 Nyalakan senter"}
 function trk(id){var v=document.querySelector("#"+id+" video"),st=v&&v.srcObject;return (st&&st.getVideoTracks&&st.getVideoTracks()[0])||null}
