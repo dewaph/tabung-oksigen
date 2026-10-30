@@ -155,6 +155,12 @@ dialog{margin:auto auto 0;max-width:none;width:100%;border-radius:16px 16px 0 0}
 <div class="acts" style="margin-top:14px;justify-content:flex-end"><button class="p" id="ltutup">Selesai</button></div>
 </dialog>
 
+<dialog id="dlg7">
+<h2>✅ Berhasil</h2>
+<p id="okmsg"></p>
+<div class="acts" style="margin-top:14px;justify-content:flex-end"><button class="p" id="okbtn">OK</button></div>
+</dialog>
+
 <dialog id="dlg4">
 <h2>Tambahkan tabung ini?</h2>
 <p class="note">Barcode terbaca:</p>
@@ -250,7 +256,7 @@ function doneLoad(){var l=$("ld");if(!l||l.className==="off")return;setTimeout(f
 function load(){return readAll().then(function(v){items=fromRows(v);render();show("warn","")}).catch(function(e){err(e)}).then(doneLoad)}
 function enqueue(fn){busy++;Q=Q.then(fn).then(function(){show("warn","")},function(e){err(e);return load()}).then(function(){busy--});return Q}
 function save(x){var hint=null;if(/^baris-\d+$/.test(x.id)){hint=+x.id.slice(6);x.id=uid()}return enqueue(function(){return post({action:"save",items:[{rowHint:hint,values:toRow(x)}]})})}
-function addRows(xs){return enqueue(function(){return post({action:"save",items:xs.map(function(x){return {rowHint:null,values:toRow(x)}})})})}
+function addRows(xs){var ok=false;return enqueue(function(){return post({action:"save",items:xs.map(function(x){return {rowHint:null,values:toRow(x)}})}).then(function(){ok=true})}).then(function(){return ok})}
 function find(id){return items.filter(function(x){return x.id===id})[0]}
 function uid(){return "t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
@@ -266,7 +272,7 @@ $("tambah").onclick=function(){
   if(items.some(function(x){return x.status!=="kembali"&&x.nomor.toLowerCase()===key}))dup.push(n);else ok.push(n)});
  if(dup.length)return show("err","Nomor ini masih tercatat di daftar aktif: "+dup.join(", ")+". Periksa lagi nomornya.");
  var tg=$("tgl").value,b=plus1m(tg),sp=$("sup").value.trim();
- var xs=ok.map(function(n){return {id:uid(),nomor:n,diterima:tg,batas:b,supplier:sp,status:"gudang",mandor:"",spk:"",lokasi:"",kembali:""}});xs.forEach(function(x){items.push(x)});addRows(xs);
+ var xs=ok.map(function(n){return {id:uid(),nomor:n,diterima:tg,batas:b,supplier:sp,status:"gudang",mandor:"",spk:"",lokasi:"",kembali:""}});xs.forEach(function(x){items.push(x)});addRows(xs).then(function(b){if(b)berhasil(xs)});
  $("nos").value="";$("dlg5").close();render();
 };
 $("q").oninput=function(){render()};$("cari").onclick=function(){render()};
@@ -296,7 +302,7 @@ function nomorAktif(n){var k=n.toLowerCase();return items.some(function(x){retur
 function previewBatas(){var t=$("stgl2").value;$("sbts").textContent=t?"Batas kembali: "+fmt(plus1m(t)):""}
 function addNo(code){
  code=String(code||"").trim();if(!code)return;
- if($("dlg4").open)return;
+ if($("dlg4").open||$("dlg7").open)return;
  var now=Date.now();
  if(code===blockCode&&now<blockUntil)return;
  if(code===last&&now-lastT<3000)return;
@@ -318,12 +324,12 @@ $("stam").onclick=function(){
  if(!tg)return show("serr2","Isi tanggal diterima.");
  if(nomorAktif(n))return show("serr2","Tabung "+n+" sudah ada di daftar aktif.");
  var x={id:uid(),nomor:n,diterima:tg,batas:plus1m(tg),supplier:sp,status:"gudang",mandor:"",spk:"",lokasi:"",kembali:""};
- items.push(x);addRows([x]);render();
+ items.push(x);addRows([x]).then(function(b){if(b)berhasil([x])});render();
  lastSup=sp;try{localStorage.setItem("tabung_sup",sp)}catch(e){}
  added++;$("sinfo").textContent="Tabung "+n+" ditambahkan ("+added+" tabung). Arahkan ke barcode berikutnya.";
  $("dlg4").close();
 };
-function stopSc(){var s=sc;sc=null;if(!s)return Promise.resolve();try{return s.stop().catch(function(){})}catch(e){return Promise.resolve()}}
+function stopSc(){offTorch("rd","sen");var s=sc;sc=null;if(!s)return Promise.resolve();try{return s.stop().catch(function(){})}catch(e){return Promise.resolve()}}
 $("scan").onclick=function(){
  added=0;last="";resetTorch("rd","sen");$("dlg3").showModal();
  if(typeof Html5Qrcode==="undefined"){$("sinfo").textContent="Pemindai belum termuat. Gunakan foto barcode di bawah, atau ketik manual.";return}
@@ -352,8 +358,18 @@ function torch(id,btn,info){
 }
 $("sen").onclick=function(){torch("rd",this,function(m){$("sinfo").textContent=m})};
 $("sen2").onclick=function(){torch("rdl",this,function(m){$("linfo").textContent=m})};
+function offTorch(id,bid){var t=trk(id);if(t&&torchOn[id]){try{t.applyConstraints({advanced:[{torch:false}]}).catch(function(){})}catch(e){}}resetTorch(id,bid)}
+function tutupScan(){if($("dlg3").open)$("dlg3").close();if($("dlg6").open)$("dlg6").close()}
+document.addEventListener("visibilitychange",function(){if(document.hidden)tutupScan()});
+window.addEventListener("pagehide",tutupScan);
+function berhasil(xs){
+ var n=xs.map(function(x){return x.nomor});
+ $("okmsg").textContent=n.length===1?"Tabung "+n[0]+" berhasil ditambahkan ke database.":n.length+" tabung berhasil ditambahkan ke database: "+n.slice(0,20).join(", ")+(n.length>20?", ...":"")+".";
+ if(!$("dlg7").open)$("dlg7").showModal();
+}
+$("okbtn").onclick=function(){$("dlg7").close()};
 var sc2=null,lastL="",lastLT=0;
-function stopSc2(){var s=sc2;sc2=null;if(!s)return Promise.resolve();try{return s.stop().catch(function(){})}catch(e){return Promise.resolve()}}
+function stopSc2(){offTorch("rdl","sen2");var s=sc2;sc2=null;if(!s)return Promise.resolve();try{return s.stop().catch(function(){})}catch(e){return Promise.resolve()}}
 function baris(l,v){return '<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--bd)"><span class="note" style="margin:0">'+l+'</span><span style="text-align:right">'+v+'</span></div>'}
 function tampilLacak(code){
  var k=code.toLowerCase(),m=items.filter(function(x){return x.nomor.toLowerCase()===k});
