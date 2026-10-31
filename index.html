@@ -76,7 +76,7 @@ td:first-child::before{content:none}
 td.ac{display:block;padding-top:8px}
 td.ac::before{content:none}
 td.ac .acts{width:100%}
-dialog{margin:auto auto 0;max-width:none;width:100%;border-radius:16px 16px 0 0}
+dialog{margin:auto;max-width:none;width:calc(100% - 24px);border-radius:14px}
 }
 #ld{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:var(--bg);transition:opacity .45s,visibility .45s}
 #ld.off{opacity:0;visibility:hidden}
@@ -163,7 +163,7 @@ dialog{margin:auto auto 0;max-width:none;width:100%;border-radius:16px 16px 0 0}
 </dialog>
 
 <dialog id="dlg7">
-<h2>✅ Berhasil</h2>
+<h2 id="okh">✅ Berhasil</h2>
 <p id="okmsg"></p>
 <div class="acts" style="margin-top:14px;justify-content:flex-end"><button class="p" id="okbtn">OK</button></div>
 </dialog>
@@ -279,7 +279,7 @@ $("tambah").onclick=function(){
   if(items.some(function(x){return x.status!=="kembali"&&x.nomor.toLowerCase()===key}))dup.push(n);else ok.push(n)});
  if(dup.length)return show("err","Nomor ini masih tercatat di daftar aktif: "+dup.join(", ")+". Periksa lagi nomornya.");
  var tg=$("tgl").value,b=plus1m(tg),sp=$("sup").value.trim();
- var xs=ok.map(function(n){return {id:uid(),nomor:n,diterima:tg,batas:b,supplier:sp,status:"gudang",mandor:"",spk:"",lokasi:"",kembali:""}});xs.forEach(function(x){items.push(x)});addRows(xs).then(function(b){if(b)berhasil(xs)});
+ var xs=ok.map(function(n){return {id:uid(),nomor:n,diterima:tg,batas:b,supplier:sp,status:"gudang",mandor:"",spk:"",lokasi:"",kembali:""}});xs.forEach(function(x){items.push(x)});konfirmasi(xs,addRows(xs));
  $("nos").value="";$("dlg5").close();render();
 };
 $("q").oninput=function(){render()};$("cari").onclick=function(){render()};
@@ -331,7 +331,7 @@ $("stam").onclick=function(){
  if(!tg)return show("serr2","Isi tanggal diterima.");
  if(nomorAktif(n))return show("serr2","Tabung "+n+" sudah ada di daftar aktif.");
  var x={id:uid(),nomor:n,diterima:tg,batas:plus1m(tg),supplier:sp,status:"gudang",mandor:"",spk:"",lokasi:"",kembali:""};
- items.push(x);addRows([x]).then(function(b){if(b)berhasil([x])});render();
+ items.push(x);konfirmasi([x],addRows([x]));render();
  lastSup=sp;try{localStorage.setItem("tabung_sup",sp)}catch(e){}
  added++;$("sinfo").textContent="Tabung "+n+" ditambahkan ("+added+" tabung). Arahkan ke barcode berikutnya.";
  $("dlg4").close();
@@ -369,10 +369,15 @@ function offTorch(id,bid){var t=trk(id);if(t&&torchOn[id]){try{t.applyConstraint
 function tutupScan(){if($("dlg3").open)$("dlg3").close();if($("dlg6").open)$("dlg6").close()}
 document.addEventListener("visibilitychange",function(){if(document.hidden)tutupScan()});
 window.addEventListener("pagehide",tutupScan);
-function berhasil(xs){
+function konfirmasi(xs,p){
  var n=xs.map(function(x){return x.nomor});
- $("okmsg").textContent=n.length===1?"Tabung "+n[0]+" berhasil ditambahkan ke database.":n.length+" tabung berhasil ditambahkan ke database: "+n.slice(0,20).join(", ")+(n.length>20?", ...":"")+".";
+ $("okh").textContent="⏳ Menyimpan...";
+ $("okmsg").textContent="Menyimpan "+(n.length===1?"tabung "+n[0]:n.length+" tabung")+" ke database...";
  if(!$("dlg7").open)$("dlg7").showModal();
+ p.then(function(b){
+  if(b){$("okh").textContent="✅ Berhasil";$("okmsg").textContent=n.length===1?"Tabung "+n[0]+" berhasil ditambahkan ke database.":n.length+" tabung berhasil ditambahkan ke database: "+n.slice(0,20).join(", ")+(n.length>20?", ...":"")+"."}
+  else{$("okh").textContent="❌ Gagal";$("okmsg").textContent="Tabung gagal disimpan ke database. Periksa koneksi lalu coba lagi."}
+ });
 }
 $("okbtn").onclick=function(){$("dlg7").close()};
 var sc2=null,lastL="",lastLT=0;
