@@ -142,9 +142,6 @@ dialog{margin:auto;max-width:none;width:calc(100% - 24px);border-radius:14px}
 <div id="rd" style="width:100%;min-height:300px;border-radius:8px;overflow:hidden;background:#000"></div>
 <div style="margin-top:8px"><button type="button" id="sen">🔦 Nyalakan senter</button></div>
 <p class="note" id="sinfo">Arahkan kamera ke barcode. Setelah terbaca, akan muncul jendela untuk menambahkan tabung.</p>
-<label for="sfile">Atau ambil/pilih foto barcode</label>
-<input type="file" id="sfile" accept="image/*" capture="environment">
-<div id="rdf" style="display:none"></div>
 <div class="acts" style="margin-top:14px;justify-content:flex-end"><button class="p" id="stutup">Selesai</button></div>
 </dialog>
 
@@ -156,9 +153,6 @@ dialog{margin:auto;max-width:none;width:calc(100% - 24px);border-radius:14px}
 <div id="lhasil"></div>
 <label for="lno">Atau ketik nomor tabung</label>
 <div class="srch"><input id="lno" placeholder="Nomor tabung"><button class="p" id="lcari">Cari</button></div>
-<label for="lfile">Atau ambil/pilih foto barcode</label>
-<input type="file" id="lfile" accept="image/*" capture="environment">
-<div id="rdlf" style="display:none"></div>
 <div class="acts" style="margin-top:14px;justify-content:flex-end"><button class="p" id="ltutup">Selesai</button></div>
 </dialog>
 
@@ -241,6 +235,7 @@ function render(){
    return '<tr><td><b>'+esc(x.nomor)+'</b>'+(x.supplier?'<div class="note">'+esc(x.supplier)+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Dikembalikan"><div class="v">'+fmt(x.kembali)+'</div></td><td data-l="Keterangan"><div class="v">'+t+'</div></td><td data-l="Pemakaian terakhir"><div class="v">'+pk+'</div></td></tr>'}).join("")+'</table>'}
  }
  $("list").innerHTML=h;
+ if(typeof curLacak!=="undefined"&&curLacak&&$("dlg6").open)tampilLacak(curLacak);
 }
 
 function norm(v){v=(v==null?"":String(v)).trim();var m=v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);if(m)return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");return v}
@@ -286,14 +281,16 @@ $("q").oninput=function(){render()};$("cari").onclick=function(){render()};
 $("q").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();this.blur();render()}};
 $("t1").onclick=function(){tab="aktif";render()};
 $("t2").onclick=function(){tab="riwayat";render()};
-$("list").onclick=function(e){
+function aksiKlik(e){
  var b=e.target.closest("button[data-a]");if(!b)return;
  var x=find(b.getAttribute("data-i"));if(!x)return;var a=b.getAttribute("data-a");
  if(a==="mandor"){cur=x;$("dno").textContent="Tabung "+x.nomor;$("mn").value="";$("spk").value="";$("lok").value="";show("derr","");$("dlg").showModal()}
 
  else if(a==="supplier"){
   cur=x;$("sno").textContent="Tabung "+x.nomor;$("stgl").value=today();show("serr","");$("dlg2").showModal()}
-};
+}
+$("list").onclick=aksiKlik;
+$("lhasil").onclick=aksiKlik;
 $("bat").onclick=function(){$("dlg").close()};
 $("buka").onclick=function(){show("err","");if(!$("tgl").value)$("tgl").value=today();if(!$("sup").value)$("sup").value=lastSup;$("dlg5").showModal()};
 $("bat5").onclick=function(){$("dlg5").close()};
@@ -339,15 +336,9 @@ $("stam").onclick=function(){
 function stopSc(){offTorch("rd","sen");var s=sc;sc=null;if(!s)return Promise.resolve();try{return s.stop().catch(function(){})}catch(e){return Promise.resolve()}}
 $("scan").onclick=function(){
  added=0;last="";resetTorch("rd","sen");$("dlg3").showModal();
- if(typeof Html5Qrcode==="undefined"){$("sinfo").textContent="Pemindai belum termuat. Gunakan foto barcode di bawah, atau ketik manual.";return}
+ if(typeof Html5Qrcode==="undefined"){$("sinfo").textContent="Pemindai belum termuat. Tambahkan tabung dengan mengetik nomornya manual.";return}
  sc=new Html5Qrcode("rd");
- sc.start({facingMode:"environment"},{fps:10,qrbox:QB},addNo,function(){}).catch(function(){sc=null;$("sinfo").textContent="Kamera tidak bisa dibuka (izin kamera ditolak atau tidak tersedia). Gunakan foto barcode di bawah, atau ketik manual."});
-};
-$("sfile").onchange=function(){
- var f=this.files&&this.files[0];this.value="";if(!f)return;
- if(typeof Html5Qrcode==="undefined")return;
- var r=new Html5Qrcode("rdf");
- r.scanFile(f,false).then(function(t){addNo(t)}).catch(function(){$("sinfo").textContent="Barcode tidak terbaca di foto itu. Coba foto lebih dekat dan jelas."}).then(function(){try{r.clear()}catch(e){}});
+ sc.start({facingMode:"environment"},{fps:10,qrbox:QB},addNo,function(){}).catch(function(){sc=null;$("sinfo").textContent="Kamera tidak bisa dibuka (izin kamera ditolak atau tidak tersedia). Tambahkan tabung dengan mengetik nomornya manual."});
 };
 $("stutup").onclick=function(){stopSc().then(function(){$("dlg3").close()})};
 $("dlg3").addEventListener("close",function(){stopSc()});
@@ -380,10 +371,17 @@ function konfirmasi(xs,p){
  });
 }
 $("okbtn").onclick=function(){$("dlg7").close()};
-var sc2=null,lastL="",lastLT=0;
+var curLacak="",sc2=null,lastL="",lastLT=0;
 function stopSc2(){offTorch("rdl","sen2");var s=sc2;sc2=null;if(!s)return Promise.resolve();try{return s.stop().catch(function(){})}catch(e){return Promise.resolve()}}
 function baris(l,v){return '<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--bd)"><span class="note" style="margin:0">'+l+'</span><span style="text-align:right">'+v+'</span></div>'}
+function aksiHtml(x){
+ var ac="";
+ if(x.status==="gudang")ac+='<button class="s" data-a="mandor" data-i="'+x.id+'">Diambil</button>';
+ if(x.status!=="kembali")ac+='<button class="s" data-a="supplier" data-i="'+x.id+'">Kembalikan ke supplier</button>';
+ return ac?'<div class="acts" style="margin-top:12px">'+ac+'</div>':"";
+}
 function tampilLacak(code){
+ curLacak=code;
  var k=code.toLowerCase(),m=items.filter(function(x){return x.nomor.toLowerCase()===k});
  var x=m.filter(function(y){return y.status!=="kembali"})[0];
  if(!x){m.sort(function(a,b){return (b.kembali||"")<(a.kembali||"")?-1:1});x=m[0]}
@@ -392,25 +390,20 @@ function tampilLacak(code){
  if(x.status==="kembali"){st='<span class="b ok">Sudah dikembalikan</span>';sw=x.kembali>x.batas?'<span class="b er">Terlambat '+Math.round((par(x.kembali)-par(x.batas))/864e5)+' hari</span>':'<span class="b ok">Tepat waktu</span>'}
  else{var s=sisa(x.batas);st=x.status==="mandor"?'<span class="b pr">Diambil mandor</span>':'<span class="b ok">Di gudang</span>';sw=s<0?'<span class="b er">Terlambat '+(-s)+' hari</span>':s<=7?'<span class="b wn">'+s+' hari lagi</span>':'<span class="b ok">'+s+' hari lagi</span>'}
  var pos=x.status==="kembali"?"Sudah di supplier":x.status==="mandor"?esc(x.lokasi||"-"):"Di gudang";
- $("lhasil").innerHTML='<div style="font-size:24px;font-weight:700;margin:6px 0;word-break:break-all">'+esc(x.nomor)+'</div>'+baris("Status",st)+baris(x.status==="kembali"?"Ketepatan":"Sisa waktu",sw)+baris("Lokasi",pos)+baris("Mandor",esc(x.mandor||"-"))+baris("No. SPK",esc(x.spk||"-"))+baris("Supplier",esc(x.supplier||"-"))+baris("Diterima",fmt(x.diterima))+baris("Batas kembali",fmt(x.batas))+(x.status==="kembali"?baris("Dikembalikan",fmt(x.kembali)):"");
+ $("lhasil").innerHTML='<div style="font-size:24px;font-weight:700;margin:6px 0;word-break:break-all">'+esc(x.nomor)+'</div>'+baris("Status",st)+baris(x.status==="kembali"?"Ketepatan":"Sisa waktu",sw)+baris("Lokasi",pos)+baris("Mandor",esc(x.mandor||"-"))+baris("No. SPK",esc(x.spk||"-"))+baris("Supplier",esc(x.supplier||"-"))+baris("Diterima",fmt(x.diterima))+baris("Batas kembali",fmt(x.batas))+(x.status==="kembali"?baris("Dikembalikan",fmt(x.kembali)):"")+aksiHtml(x);
 }
 function lacak(code){
  code=String(code||"").trim();if(!code)return;
+ if($("dlg").open||$("dlg2").open)return;
  var now=Date.now();if(code===lastL&&now-lastLT<2000)return;lastL=code;lastLT=now;
  if(navigator.vibrate)navigator.vibrate(80);
  $("linfo").textContent="Barcode terbaca: "+code;tampilLacak(code);
 }
 $("lacak").onclick=function(){
- lastL="";resetTorch("rdl","sen2");$("lhasil").innerHTML="";$("lno").value="";$("linfo").textContent="Arahkan kamera ke barcode tabung.";$("dlg6").showModal();
- if(typeof Html5Qrcode==="undefined"){$("linfo").textContent="Pemindai belum termuat. Gunakan foto barcode atau ketik nomor di bawah.";return}
+ lastL="";curLacak="";resetTorch("rdl","sen2");$("lhasil").innerHTML="";$("lno").value="";$("linfo").textContent="Arahkan kamera ke barcode tabung.";$("dlg6").showModal();
+ if(typeof Html5Qrcode==="undefined"){$("linfo").textContent="Pemindai belum termuat. Ketik nomor tabung di bawah.";return}
  sc2=new Html5Qrcode("rdl");
- sc2.start({facingMode:"environment"},{fps:10,qrbox:QB},lacak,function(){}).catch(function(){sc2=null;$("linfo").textContent="Kamera tidak bisa dibuka (izin ditolak atau tidak tersedia). Gunakan foto barcode atau ketik nomor di bawah."});
-};
-$("lfile").onchange=function(){
- var f=this.files&&this.files[0];this.value="";if(!f)return;
- if(typeof Html5Qrcode==="undefined")return;
- var r=new Html5Qrcode("rdlf");
- r.scanFile(f,false).then(function(t){lacak(t)}).catch(function(){$("linfo").textContent="Barcode tidak terbaca di foto itu. Coba foto lebih dekat dan jelas."}).then(function(){try{r.clear()}catch(e){}});
+ sc2.start({facingMode:"environment"},{fps:10,qrbox:QB},lacak,function(){}).catch(function(){sc2=null;$("linfo").textContent="Kamera tidak bisa dibuka (izin ditolak atau tidak tersedia). Ketik nomor tabung di bawah."});
 };
 $("lcari").onclick=function(){var v=$("lno").value.trim();if(!v)return;lastL="";lacak(v)};
 $("lno").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();$("lcari").click()}};
