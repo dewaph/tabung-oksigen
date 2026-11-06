@@ -70,6 +70,13 @@ th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--bd);vertical
 dialog{border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);max-width:420px;width:calc(100% - 32px);padding:16px}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 #dlg3,#dlg6{max-width:560px}
+.spkl{max-height:210px;overflow:auto;border:1px solid var(--bd);border-radius:8px;margin-top:6px;background:var(--card);display:none}
+.spkl.on{display:block}
+.spkl .spki{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--bd);border-radius:0;background:var(--card);padding:9px 10px;min-height:0}
+.spkl .spki:last-child{border-bottom:0}
+.spkl .spki span{display:block;font-size:13px}
+.spkl .spki small{display:block;color:var(--mu);font-size:12px}
+.spkl .spkn{padding:10px;color:var(--mu);font-size:13px}
 .msg{display:none;padding:8px 10px;border-radius:8px;margin-top:8px;background:var(--erb);color:var(--er);font-size:13px}
 @media(max-width:640px){
 main{padding:12px}
@@ -149,7 +156,7 @@ dialog{margin:auto;max-width:none;width:calc(100% - 24px);border-radius:14px}
 <h2>Diambil</h2>
 <p class="note" id="dno"></p>
 <label for="mn">Nama mandor</label><input id="mn">
-<label for="spk">Nomor SPK</label><input id="spk">
+<label for="spk">Nomor SPK (cari lalu pilih dari daftar)</label><input id="spk" type="search" autocomplete="off" placeholder="Ketik no. SPK, pekerjaan, atau lokasi"><div id="spkl" class="spkl"></div><div id="spkp" class="note"></div>
 <label for="lok">Lokasi proyek</label><input id="lok">
 <div class="acts" style="margin-top:14px;justify-content:flex-end"><button id="bat">Batal</button><button class="p" id="sim">Simpan</button></div>
 <div id="derr" class="msg"></div>
@@ -223,7 +230,6 @@ function today(){return iso(new Date())}
 function sisa(s){return Math.round((par(s)-par(today()))/864e5)}
 function esc(t){var e=document.createElement("div");e.textContent=t==null?"":t;return e.innerHTML}
 function show(id,t){var e=$(id);e.textContent=t;e.style.display=t?"block":"none"}
-$("tgl").value=today();
 
 function render(){
  var q=($("q").value||"").trim().toLowerCase();
@@ -256,27 +262,34 @@ function render(){
  if(typeof curLacak!=="undefined"&&curLacak&&$("dlg6").open)tampilLacak(curLacak);
 }
 
-function norm(v){v=(v==null?"":String(v)).trim();var m=v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);if(m)return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");return v}
-function stIn(v){v=(v||"").toLowerCase();return v.indexOf("kembali")>=0?"kembali":v.indexOf("ambil")>=0?"mandor":"gudang"}
-function stOut(v){return v==="kembali"?"Kembali":v==="mandor"?"Diambil":"Di gudang"}
-function toRow(x){return [x.nomor,x.supplier||"",x.diterima||"",x.batas||"",stOut(x.status),x.mandor||"",x.spk||"",x.lokasi||"",x.kembali||"",x.id]}
-function fromRows(v){var out=[];(v||[]).forEach(function(r,i){r=r||[];if(!String(r[0]==null?"":r[0]).trim())return;var d=norm(r[2]);out.push({id:String(r[9]||"").trim()||("baris-"+(i+2)),nomor:String(r[0]).trim(),supplier:r[1]||"",diterima:d,batas:norm(r[3])||(d?plus1m(d):""),status:stIn(r[4]),mandor:r[5]||"",spk:r[6]||"",lokasi:r[7]||"",kembali:norm(r[8])})});return out}
-var API="https://script.google.com/macros/s/AKfycbzg9Bp8hveGba5D7YJNwlc6HUy2usmyHDCySftKOjOk5Ms7BZUcnjiBicnQPsFxrmiO/exec";
-function post(body){
- return fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(j){if(j&&j.error)throw {code:j.error,message:j.message};return j});
+function norm(v){return v==null?"":String(v).slice(0,10)}
+var SB_URL="https://alnmjxyyfhkytwkwzpon.supabase.co";
+var SB_KEY="sb_publishable_DaL5YRZ7cIVN52tEiz3REw_u2s9Pu2g";
+function sb(path,o){
+ o=o||{};var h={apikey:SB_KEY,"Content-Type":"application/json"};
+ if(SB_KEY.indexOf("eyJ")===0)h.Authorization="Bearer "+SB_KEY;
+ if(o.prefer)h.Prefer=o.prefer;
+ return fetch(SB_URL+"/rest/v1/"+path,{method:o.method||"GET",headers:h,body:o.body?JSON.stringify(o.body):undefined}).then(function(r){
+  if(!r.ok)return r.json().catch(function(){return {}}).then(function(j){throw {message:j.message||("HTTP "+r.status)}});
+  return r.text().then(function(t){return t?JSON.parse(t):null});
+ });
 }
+function toDb(x){return {id:x.id,nomor:x.nomor,supplier:x.supplier||"",diterima:x.diterima||null,batas:x.batas||null,status:x.status,mandor:x.mandor||"",spk:x.spk||"",lokasi:x.lokasi||"",kembali:x.kembali||null}}
+function fromDb(rows){return (rows||[]).map(function(r){var d=norm(r.diterima);return {id:r.id,nomor:r.nomor,supplier:r.supplier||"",diterima:d,batas:norm(r.batas)||(d?plus1m(d):""),status:r.status||"gudang",mandor:r.mandor||"",spk:r.spk||"",lokasi:r.lokasi||"",kembali:norm(r.kembali)}})}
+function upsert(xs){return sb("tabung?on_conflict=id",{method:"POST",prefer:"resolution=merge-duplicates,return=minimal",body:xs.map(toDb)})}
 function err(e){
- var m="Gagal terhubung ke spreadsheet"+(e&&e.message?": "+e.message:".");
- if(e instanceof TypeError)m="Tidak bisa terhubung ke internet atau ke skrip spreadsheet. Periksa koneksi dan alamat skrip.";
+ var m="Gagal terhubung ke database Supabase"+(e&&e.message?": "+e.message:".");
+ if(e instanceof TypeError)m="Tidak bisa terhubung ke internet atau ke Supabase. Periksa koneksi dan SB_URL.";
  show("warn",m);
 }
-function readAll(){return post({action:"list"}).then(function(j){return j.values||[]})}
+function readAll(){return sb("tabung?select=*&order=created_at.desc")}
 var T0=Date.now();
 function doneLoad(){var l=$("ld");if(!l||l.className==="off")return;setTimeout(function(){l.className="off";setTimeout(function(){if(l.parentNode)l.parentNode.removeChild(l)},500)},Math.max(0,900-(Date.now()-T0)))}
-function load(){return readAll().then(function(v){items=fromRows(v);render();show("warn","")}).catch(function(e){err(e)}).then(doneLoad)}
+function load(){return readAll().then(function(v){items=fromDb(v);render();show("warn","")}).catch(function(e){err(e)}).then(doneLoad)}
 function enqueue(fn){busy++;Q=Q.then(fn).then(function(){show("warn","")},function(e){err(e);return load()}).then(function(){busy--});return Q}
-function save(x){var hint=null;if(/^baris-\d+$/.test(x.id)){hint=+x.id.slice(6);x.id=uid()}return enqueue(function(){return post({action:"save",items:[{rowHint:hint,values:toRow(x)}]})})}
-function addRows(xs){var ok=false;return enqueue(function(){return post({action:"save",items:xs.map(function(x){return {rowHint:null,values:toRow(x)}})}).then(function(){ok=true})}).then(function(){return ok})}
+function save(x){return enqueue(function(){return upsert([x])})}
+function addRows(xs){var ok=false;return enqueue(function(){return upsert(xs).then(function(){ok=true})}).then(function(){return ok})}
+function kosongTambah(){$("nos").value="";$("sup").value="";$("tgl").value=""}
 function find(id){return items.filter(function(x){return x.id===id})[0]}
 function uid(){return "t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
@@ -293,7 +306,7 @@ $("tambah").onclick=function(){
  if(dup.length)return show("err","Nomor ini masih tercatat di daftar aktif: "+dup.join(", ")+". Periksa lagi nomornya.");
  var tg=$("tgl").value,b=plus1m(tg),sp=$("sup").value.trim();
  var xs=ok.map(function(n){return {id:uid(),nomor:n,diterima:tg,batas:b,supplier:sp,status:"gudang",mandor:"",spk:"",lokasi:"",kembali:""}});xs.forEach(function(x){items.push(x)});konfirmasi(xs,addRows(xs));
- $("nos").value="";$("dlg5").close();render();
+ kosongTambah();$("dlg5").close();render();
 };
 $("q").oninput=function(){render()};$("cari").onclick=function(){render()};
 $("q").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();this.blur();render()}};
@@ -302,24 +315,56 @@ $("t2").onclick=function(){tab="riwayat";render()};
 function aksiKlik(e){
  var b=e.target.closest("button[data-a]");if(!b)return;
  var x=find(b.getAttribute("data-i"));if(!x)return;var a=b.getAttribute("data-a");
- if(a==="mandor"){cur=x;$("dno").textContent="Tabung "+x.nomor;$("mn").value="";$("spk").value="";$("lok").value="";show("derr","");$("dlg").showModal()}
+ if(a==="mandor"){cur=x;$("dno").textContent="Tabung "+x.nomor;$("mn").value="";spkReset();$("lok").value="";show("derr","");$("dlg").showModal()}
 
  else if(a==="supplier"){
   cur=x;$("sno").textContent="Tabung "+x.nomor;$("stgl").value=today();show("serr","");$("dlg2").showModal()}
 }
+var spkRes=[],spkSel=null,spkTok=0,spkTm=0;
+function spkReset(){spkSel=null;spkRes=[];$("spk").value="";$("spkp").textContent="";$("spkl").className="spkl";$("spkl").innerHTML=""}
+function spkDraw(msg){
+ var l=$("spkl");
+ if(msg){l.innerHTML='<div class="spkn">'+esc(msg)+'</div>'}
+ else if(!spkRes.length){l.innerHTML='<div class="spkn">SPK tidak ditemukan.</div>'}
+ else{l.innerHTML=spkRes.map(function(r,i){return '<button type="button" class="spki" data-k="'+i+'"><b>'+esc(r.no_spk)+'</b><span>'+esc(r.jenis_pekerjaan||"")+'</span><small>'+esc([r.lokasi,r.pengawas?("Pengawas: "+r.pengawas):""].filter(Boolean).join(" · "))+'</small></button>'}).join("")}
+ l.className="spkl on";
+}
+function spkCari(q){
+ var tok=++spkTok;
+ q=String(q||"").replace(/[^\w\s\/.\-]/g," ").trim();
+ var f="select=no_spk,jenis_pekerjaan,pengawas,lokasi,tanggal&order=tanggal.desc,id.desc&limit=30";
+ if(q){var v=encodeURIComponent(q);f+="&or=("+["no_spk","jenis_pekerjaan","lokasi","pengawas"].map(function(c){return c+".ilike.*"+v+"*"}).join(",")+")"}
+ spkDraw("Mencari...");
+ sb("spk?"+f).then(function(r){if(tok!==spkTok)return;spkRes=r||[];spkDraw()}).catch(function(e){if(tok!==spkTok)return;spkRes=[];spkDraw("Gagal memuat daftar SPK"+(e&&e.message?": "+e.message:"."))});
+}
+$("spk").oninput=function(){spkSel=null;$("spkp").textContent="";clearTimeout(spkTm);var v=this.value;spkTm=setTimeout(function(){spkCari(v)},250)};
+$("spk").onfocus=function(){if(!spkSel&&!$("spkl").classList.contains("on"))spkCari(this.value)};
+$("spkl").onclick=function(e){
+ var b=e.target.closest("button[data-k]");if(!b)return;
+ var r=spkRes[+b.getAttribute("data-k")];if(!r)return;
+ spkSel=r;$("spk").value=r.no_spk;
+ $("spkp").textContent=[r.jenis_pekerjaan,r.pengawas?("Pengawas: "+r.pengawas):""].filter(Boolean).join(" · ");
+ if(r.lokasi)$("lok").value=r.lokasi;
+ $("spkl").className="spkl";$("spkl").innerHTML="";
+};
 $("list").onclick=aksiKlik;
 $("lhasil").onclick=aksiKlik;
 $("bat").onclick=function(){$("dlg").close()};
-$("buka").onclick=function(){show("err","");if(!$("tgl").value)$("tgl").value=today();if(!$("sup").value)$("sup").value=lastSup;$("dlg5").showModal()};
-$("bat5").onclick=function(){$("dlg5").close()};
+$("buka").onclick=function(){show("err","");kosongTambah();$("dlg5").showModal()};
+$("bat5").onclick=function(){kosongTambah();$("dlg5").close()};
 $("sim").onclick=function(){
- var m=$("mn").value.trim(),s=$("spk").value.trim();
- if(!m||!s||!$("lok").value.trim())return show("derr","Nama mandor, nomor SPK, dan lokasi proyek wajib diisi.");
- cur.status="mandor";cur.mandor=m;cur.spk=s;cur.lokasi=$("lok").value.trim();save(cur);$("dlg").close();render();
+ var m=$("mn").value.trim(),lk=$("lok").value.trim(),sv=$("spk").value.trim(),btn=this;
+ if(!m||!sv||!lk)return show("derr","Nama mandor, nomor SPK, dan lokasi proyek wajib diisi.");
+ if(!spkSel||sv!==spkSel.no_spk)return show("derr","Pilih nomor SPK dari daftar hasil pencarian.");
+ show("derr","");btn.disabled=true;
+ sb("spk?select=no_spk&limit=1&no_spk=eq."+encodeURIComponent(sv)).then(function(r){
+  btn.disabled=false;
+  if(!r||!r.length||r[0].no_spk!==sv)return show("derr","Nomor SPK "+sv+" tidak ada di daftar SPK. Gagal menyimpan.");
+  cur.status="mandor";cur.mandor=m;cur.spk=sv;cur.lokasi=lk;save(cur);$("dlg").close();render();
+ }).catch(function(e){btn.disabled=false;show("derr","Gagal memeriksa SPK ke database"+(e&&e.message?": "+e.message:".")+" Data belum disimpan.")});
 };
 var sc=null,last="",lastT=0,added=0;
-var lastSup="",blockCode="",blockUntil=0;
-try{lastSup=localStorage.getItem("tabung_sup")||""}catch(e){}
+var blockCode="",blockUntil=0;
 function nomorAktif(n){var k=n.toLowerCase();return items.some(function(x){return x.status!=="kembali"&&x.nomor.toLowerCase()===k})}
 function previewBatas(){var t=$("stgl2").value;$("sbts").textContent=t?"Batas kembali: "+fmt(plus1m(t)):""}
 function addNo(code){
@@ -332,14 +377,14 @@ function addNo(code){
  if(nomorAktif(code)){$("sinfo").textContent="Tabung "+code+" sudah ada di daftar aktif.";umpan(false,"ov1");return}
  umpan(true,"ov1");
  $("sc-no").textContent=code;
- $("ssup").value=$("sup").value.trim()||lastSup;
- $("stgl2").value=$("tgl").value||today();
+ $("ssup").value="";
+ $("stgl2").value="";
  show("serr2","");previewBatas();
  $("dlg4").showModal();
 }
 $("stgl2").onchange=previewBatas;$("stgl2").oninput=previewBatas;
 $("sbat2").onclick=function(){$("dlg4").close()};
-$("dlg4").addEventListener("close",function(){blockCode=$("sc-no").textContent;blockUntil=Date.now()+6000});
+$("dlg4").addEventListener("close",function(){$("ssup").value="";$("stgl2").value="";blockCode=$("sc-no").textContent;blockUntil=Date.now()+6000});
 $("stam").onclick=function(){
  var n=$("sc-no").textContent,sp=$("ssup").value.trim(),tg=$("stgl2").value;
  if(!sp)return show("serr2","Nama supplier wajib diisi.");
@@ -347,7 +392,6 @@ $("stam").onclick=function(){
  if(nomorAktif(n))return show("serr2","Tabung "+n+" sudah ada di daftar aktif.");
  var x={id:uid(),nomor:n,diterima:tg,batas:plus1m(tg),supplier:sp,status:"gudang",mandor:"",spk:"",lokasi:"",kembali:""};
  items.push(x);konfirmasi([x],addRows([x]));render();
- lastSup=sp;try{localStorage.setItem("tabung_sup",sp)}catch(e){}
  added++;$("sinfo").textContent="Tabung "+n+" ditambahkan ("+added+" tabung). Arahkan ke barcode berikutnya.";
  $("dlg4").close();
 };
@@ -451,7 +495,7 @@ $("ssim").onclick=function(){
 };
 
 render();
-if(API.indexOf("PASTE_")===0){show("warn","Alamat skrip spreadsheet belum diisi di file index.html (baris yang diawali var API=).");doneLoad()}
+if(SB_URL.indexOf("PASTE_")>=0||SB_KEY.indexOf("PASTE_")>=0){show("warn","SB_URL dan SB_KEY Supabase belum diisi di file index.html.");doneLoad()}
 else{
  load();
  setInterval(function(){if(!busy&&!document.querySelector("dialog[open]"))load()},60000);
