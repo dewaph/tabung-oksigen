@@ -15,9 +15,11 @@
 :root[data-theme="dark"]{--bg:#12171e;--card:#1b222b;--tx:#e8edf3;--mu:#98a3b3;--bd:#2d3744;--pr:#5aa5f0;--ok:#4cc38a;--wn:#e6b14f;--er:#f07a6d;--okb:#17352a;--wnb:#3a2f16;--erb:#40201c;--prb:#18314d;color-scheme:dark}
 :root[data-theme="light"]{color-scheme:light}
 #tema{min-width:44px;font-size:18px;line-height:1;padding:8px 10px}.tb{display:flex;gap:6px}
+#pst{padding:8px 10px;border-radius:8px;background:var(--wnb);color:var(--wn);font-size:13px;margin:-4px 0 10px}
 :root{--ylb:#fff3b0;--yle:#e0b422}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ylb:#4a3f0c;--yle:#b89a1c}}
 :root[data-theme="dark"]{--ylb:#4a3f0c;--yle:#b89a1c}
+.mo{display:none}
 .det{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:6px 0 0;font-size:13px;text-align:left;min-width:0}
 .det dt{color:var(--mu)}
 .det dd{margin:0;font-weight:600;word-break:break-word}
@@ -106,6 +108,8 @@ tr{display:block;border:1px solid var(--bd);border-radius:10px;padding:10px 12px
 td{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border:0;padding:5px 0}
 td::before{content:attr(data-l);color:var(--mu);font-size:13px;flex:0 0 auto;padding-top:2px}
 .v{text-align:right}
+td.mo{display:flex}
+.dsk{display:none}
 td:first-child{display:block;font-size:18px;border-bottom:1px solid var(--bd);padding-bottom:8px;margin-bottom:4px}
 td:first-child::before{content:none}
 td.ac{display:block;padding-top:8px}
@@ -136,6 +140,7 @@ dialog{margin:auto;max-width:none;width:calc(100% - 24px);border-radius:14px}
 <div id="ld" role="status" aria-live="polite"><div class="ldbox"><div class="cyl"><svg viewBox="0 0 64 96" aria-hidden="true"><rect x="19" y="3" width="26" height="7" rx="3.5" fill="var(--pr)"/><rect x="28" y="9" width="8" height="13" rx="2" fill="var(--pr)"/><rect x="10" y="20" width="44" height="73" rx="21" fill="var(--pr)"/><rect x="10" y="50" width="44" height="7" fill="var(--bg)"/><rect x="18" y="31" width="6" height="32" rx="3" fill="#fff" opacity=".28"/></svg><i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i><i class="bb b4"></i></div><p>Memuat data tabung<span class="dots"></span></p><div class="bar"><span></span></div></div></div>
 <main>
 <div class="top"><h1>Pengelolaan Tabung Oksigen</h1><span class="tb"><button id="tema" type="button" aria-label="Ganti mode terang/gelap" title="Ganti mode terang/gelap">🌙</button></span></div>
+<div id="pst" style="display:none"></div>
 <div id="warn" class="msg"></div>
 <div class="stats" id="stats"></div>
 
@@ -245,6 +250,7 @@ function det(x){
  var r=[["Mandor",x.mandor],["No. SPK",x.spk],["Lokasi",x.lokasi]].filter(function(a){return a[1]});
  return '<dl class="det">'+r.map(function(a){return '<dt>'+a[0]+'</dt><dd>'+esc(a[1])+'</dd>'}).join("")+'</dl>';
 }
+function mo(x){return [["Mandor",x.mandor],["No. SPK",x.spk],["Lokasi",x.lokasi]].filter(function(a){return a[1]}).map(function(a){return '<td class="mo" data-l="'+a[0]+'"><div class="v">'+esc(a[1])+'</div></td>'}).join("")}
 function render(){
  var q=($("q").value||"").trim().toLowerCase();
  function match(x){return !q||[x.nomor,x.supplier,x.mandor,x.spk,x.lokasi].join(" ").toLowerCase().indexOf(q)>=0}
@@ -260,17 +266,17 @@ function render(){
   if(!akt.length){h='<div class="empty">'+(q?'Tidak ditemukan.':'Belum ada tabung aktif.')+'</div>'}
   else{h='<table><tr><th>No. tabung</th><th>Diterima</th><th>Batas kembali</th><th>Sisa waktu</th><th>Posisi</th><th>Aksi</th></tr>'+akt.map(function(x){
    var s=sisa(x.batas),bd=s<0?'<span class="b er">Terlambat '+(-s)+' hari</span>':s<=7?'<span class="b wn">'+s+' hari lagi</span>':'<span class="b ok">'+s+' hari lagi</span>';
-   var pos=x.status==="mandor"?'<span class="b wn2">Diambil mandor</span>'+det(x):'<span class="b ok">Di gudang</span>';
+   var pos=x.status==="mandor"?'<span class="b wn2">Diambil mandor</span><div class="dsk">'+det(x)+'</div>':'<span class="b ok">Di gudang</span>';
    var ac=x.status==="mandor"?'':'<button class="s" data-a="mandor" data-i="'+x.id+'">Diambil</button>';
    ac+='<button class="s" data-a="supplier" data-i="'+x.id+'">Kembalikan ke supplier</button>';
-   return '<tr'+(x.status==="mandor"?' class="dm"':'')+'><td><b>'+esc(x.nomor)+'</b>'+(x.supplier?'<div class="note">'+esc(x.supplier)+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Sisa waktu"><div class="v">'+bd+'</div></td><td data-l="Posisi"><div class="v">'+pos+'</div></td><td class="ac"><div class="acts">'+ac+'</div></td></tr>'}).join("")+'</table>'}
+   return '<tr'+(x.status==="mandor"?' class="dm"':'')+'><td><b>'+esc(x.nomor)+'</b>'+(x.supplier?'<div class="note">'+esc(x.supplier)+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Sisa waktu"><div class="v">'+bd+'</div></td><td data-l="Posisi"><div class="v">'+pos+'</div></td>'+(x.status==="mandor"?mo(x):"")+'<td class="ac"><div class="acts">'+ac+'</div></td></tr>'}).join("")+'</table>'}
  }else{
   rw=rw.filter(match);rw.sort(function(a,b){return (b.kembali||"")<(a.kembali||"")?-1:1});
   if(!rw.length){h='<div class="empty">'+(q?'Tidak ditemukan.':'Belum ada riwayat pengembalian.')+'</div>'}
   else{h='<table><tr><th>No. tabung</th><th>Diterima</th><th>Batas kembali</th><th>Dikembalikan</th><th>Keterangan</th><th>Pemakaian terakhir</th></tr>'+rw.map(function(x){
    var t=x.kembali>x.batas?'<span class="b er">Terlambat '+Math.round((par(x.kembali)-par(x.batas))/864e5)+' hari</span>':'<span class="b ok">Tepat waktu</span>';
    var pk=x.spk?det(x):'-';
-   return '<tr><td><b>'+esc(x.nomor)+'</b>'+(x.supplier?'<div class="note">'+esc(x.supplier)+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Dikembalikan"><div class="v">'+fmt(x.kembali)+'</div></td><td data-l="Keterangan"><div class="v">'+t+'</div></td><td data-l="Pemakaian terakhir"><div class="v">'+pk+'</div></td></tr>'}).join("")+'</table>'}
+   return '<tr><td><b>'+esc(x.nomor)+'</b>'+(x.supplier?'<div class="note">'+esc(x.supplier)+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Dikembalikan"><div class="v">'+fmt(x.kembali)+'</div></td><td data-l="Keterangan"><div class="v">'+t+'</div></td><td class="dsk" data-l="Pemakaian terakhir"><div class="v">'+pk+'</div></td>'+(x.spk?mo(x):"")+'</tr>'}).join("")+'</table>'}
  }
  $("list").innerHTML=h;
  if(typeof curLacak!=="undefined"&&curLacak&&$("dlg6").open)tampilLacak(curLacak);
@@ -308,17 +314,27 @@ function daftarPush(g){
   return sub||pf({action:"key"}).then(function(k){return g.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(k.key)})});
  }).then(function(n){return pf({action:"subscribe",sub:n.toJSON(),url:location.href.split("#")[0]})});
 }
+function pstSet(t){var e=$("pst");e.textContent=t||"";e.style.display=t?"block":"none"}
+function aktifkanPush(){
+ return swReg().then(daftarPush).then(function(r){if(!r||!r.ok)throw {message:"gagal mendaftar ke server"};pstSet("")})
+ .catch(function(e){pstSet("Notifikasi gagal diaktifkan: "+((e&&e.message)||e)+". Pastikan file sw.js ada satu folder dengan index.html dan alamat memakai https.")});
+}
 function pushAuto(){
- if(!pushOk()||Notification.permission==="denied")return;
- swReg().then(function(g){
-  if(Notification.permission==="granted")return daftarPush(g);
-  // izin belum ditanya: minta saat sentuhan pertama (syarat iPhone/Safari)
-  var go=function(){
-   document.removeEventListener("click",go,true);document.removeEventListener("touchend",go,true);
-   Notification.requestPermission().then(function(p){if(p==="granted")daftarPush(g)}).catch(function(){});
-  };
-  document.addEventListener("click",go,true);document.addEventListener("touchend",go,true);
- }).catch(function(){});
+ var ios=/iPhone|iPad|iPod/.test(navigator.userAgent),pwa=!!navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
+ if(!window.isSecureContext)return pstSet("Notifikasi hanya bisa aktif lewat alamat https://. Buka aplikasi lewat alamat https.");
+ if(!pushOk())return pstSet(ios&&!pwa?"Agar notifikasi aktif di iPhone: ketuk tombol Bagikan, pilih Tambah ke Layar Utama, lalu buka aplikasi dari ikon itu.":"Browser ini tidak mendukung notifikasi. Coba buka lewat Chrome.");
+ if(Notification.permission==="denied")return pstSet("Notifikasi diblokir di HP ini. Aktifkan lewat pengaturan situs di browser (Izin, lalu Notifikasi), kemudian buka ulang aplikasi.");
+ if(Notification.permission==="granted"){aktifkanPush();return}
+ pstSet("Ketuk layar, lalu pilih Izinkan agar notifikasi tabung aktif.");
+ var evs=["click","touchend","pointerup","keydown"];
+ var go=function(){
+  evs.forEach(function(ev){document.removeEventListener(ev,go,true)});
+  new Promise(function(res){var r=Notification.requestPermission(res);if(r&&r.then)r.then(res)}).then(function(p){
+   if(p==="granted")return aktifkanPush();
+   pstSet(p==="denied"?"Izin notifikasi ditolak. Aktifkan lewat pengaturan situs di browser, lalu buka ulang aplikasi.":"Izin notifikasi belum diberikan. Muat ulang halaman lalu pilih Izinkan.");
+  });
+ };
+ evs.forEach(function(ev){document.addEventListener(ev,go,true)});
 }
 pushAuto();
 ["nos","sup","mn","lok","spk","ssup","q","lno"].forEach(function(i){
