@@ -981,6 +981,9 @@ function seg(){var d=gelap();btn.innerHTML=d?IC_SUN:IC_MOON;btn.title=d?"Ganti k
 btn.addEventListener("click",function(){var t=gelap()?"light":"dark";root.setAttribute("data-theme",t);try{localStorage.setItem("tabung_tema",t)}catch(e){}seg()});
 if(mq){var f=function(){seg()};mq.addEventListener?mq.addEventListener("change",f):mq.addListener&&mq.addListener(f)}
 seg();
+/* Saat dibuka di dalam menu utama: ikuti tema menu, tombol tema sendiri disembunyikan */
+window.addEventListener("message",function(e){var d=e.data;if(e.source===window.parent&&d&&d.type==="theme"&&(d.theme==="dark"||d.theme==="light")){root.setAttribute("data-theme",d.theme);seg()}});
+if(window.parent!==window)btn.style.display="none";
 })();
 </script>
 <script>
