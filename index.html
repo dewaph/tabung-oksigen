@@ -468,6 +468,19 @@ tr.dm:hover {
 }
 tr.dm td { border-bottom-color: color-mix(in srgb, var(--yle) 35%, var(--bd)); }
 
+tr.dk {
+  background: var(--okb);
+  box-shadow: inset 4px 0 0 var(--ok);
+}
+tr.dk:hover {
+  background: color-mix(in srgb, var(--okb) 85%, var(--ok));
+}
+tr.dk td { border-bottom-color: color-mix(in srgb, var(--ok) 35%, var(--bd)); }
+@media (max-width: 640px) {
+  tr.dk { border-color: color-mix(in srgb, var(--ok) 45%, var(--bd)); }
+  tr.dk td:first-child { border-bottom-color: color-mix(in srgb, var(--ok) 30%, var(--bd)); }
+}
+
 /* Badges */
 .b {
   display: inline-flex;
@@ -828,8 +841,10 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
     <span>Scan barcode</span>
   </button>
 </div>
-<label for="nos">Nomor tabung (satu per baris, atau pisahkan dengan koma)</label>
-<textarea id="nos" placeholder="Contoh:&#10;OX-10231&#10;OX-10232"></textarea>
+<label>Nomor tabung (wajib diisi) dan nomor barcode (boleh dikosongkan)</label>
+<p class="note">Bisa juga ketik/tempel format <b>barcode / nomor tabung</b>, mis. 644310641 / 2346, di kolom No. tabung.</p>
+<div id="nrows"></div>
+<div style="margin-top:8px"><button type="button" id="addrow"><span>+ Tambah baris</span></button></div>
 <div class="row">
 <div><label for="tgl">Tanggal diterima</label><input type="date" id="tgl"></div>
 <div><label for="sup">Supplier (wajib diisi)</label><input id="sup" placeholder="Nama supplier"></div>
@@ -860,7 +875,7 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
   </button>
 </div>
 <div class="srch">
-  <input id="q" type="search" placeholder="Cari nomor tabung, supplier, SPK, lokasi">
+  <input id="q" type="search" placeholder="Cari nomor tabung, barcode, supplier, SPK, lokasi">
   <button class="p" id="cari">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
     <span>Cari</span>
@@ -874,7 +889,7 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
 <h2>Diambil</h2>
 <p class="note" id="dno"></p>
 <label for="spk">Nomor SPK (cari lalu pilih dari daftar)</label><input id="spk" type="search" autocomplete="off" placeholder="Ketik no. SPK, pekerjaan, atau lokasi"><div id="spkl" class="spkl"></div><div id="spkp" class="note"></div>
-<label for="tk">Tanggal keluar</label><input type="date" id="tk"><label for="ipb">No. IPB</label><input id="ipb"><label for="pgm">Pengambil</label><input id="pgm"><label for="lok">Lokasi proyek</label><input id="lok">
+<label for="tk">Tanggal keluar</label><input type="date" id="tk"><label for="ipb">No. IPB</label><input id="ipb"><p class="note" id="ipbh"></p><label for="pgm">Pengambil</label><input id="pgm"><label for="lok">Lokasi proyek</label><input id="lok">
 <div class="acts" style="margin-top:18px;justify-content:flex-end">
   <button id="bat">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -917,9 +932,9 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
 </div>
 <p class="note" id="linfo">Arahkan kamera ke barcode tabung.</p>
 <div id="lhasil"></div>
-<label for="lno">Atau ketik nomor tabung</label>
+<label for="lno" id="llno">Atau ketik nomor tabung atau nomor barcode</label>
 <div class="srch">
-  <input id="lno" placeholder="Nomor tabung">
+  <input id="lno" placeholder="Nomor tabung / barcode">
   <button class="p" id="lcari">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
     <span>Cari</span>
@@ -951,6 +966,7 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
 <h2>Tambahkan tabung ini?</h2>
 <p class="note">Barcode terbaca:</p>
 <div id="sc-no" style="font-size:28px;font-weight:800;margin:2px 0 8px;word-break:break-all;color:var(--pr)"></div>
+<label for="snt">No. tabung (wajib diisi)</label><input id="snt" placeholder="Nomor tabung">
 <label for="ssup">Supplier</label><input id="ssup" placeholder="Nama supplier">
 <label for="ssj">No. SJ</label><input id="ssj" placeholder="Nomor surat jalan"><label for="stgl2">Tanggal diterima</label><input type="date" id="stgl2">
 <p class="note" id="sbts"></p>
@@ -967,7 +983,7 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
 <div id="serr2" class="msg"></div>
 </dialog>
 
-<dialog id="dlg8"><h2>Tabung kosong diterima</h2><p class="note" id="kno"></p><label for="ktgl">Tanggal masuk dari proyek</label><input type="date" id="ktgl"><label for="stt">No. STT</label><input id="stt"><label for="png">Pengantar</label><input id="png"><div class="acts" style="margin-top:18px;justify-content:flex-end"><button id="kbat"><span>Batal</span></button><button class="p" id="ksim"><span>Simpan</span></button></div><div id="kerr" class="msg"></div></dialog>
+<dialog id="dlg8"><h2>Tabung kosong diterima</h2><p class="note" id="kno"></p><label for="ktgl">Tanggal masuk dari proyek</label><input type="date" id="ktgl"><label for="stt">No. STT</label><input id="stt"><p class="note" id="stth"></p><label for="png">Pengantar</label><input id="png"><div class="acts" style="margin-top:18px;justify-content:flex-end"><button id="kbat"><span>Batal</span></button><button class="p" id="ksim"><span>Simpan</span></button></div><div id="kerr" class="msg"></div></dialog>
 
 <dialog id="dlg2">
 <h2>Kembalikan ke supplier</h2>
@@ -1028,8 +1044,18 @@ function sisa(s){return Math.round((par(s)-par(today()))/864e5)}
 function esc(t){var e=document.createElement("div");e.textContent=t==null?"":t;return e.innerHTML}
 function show(id,t){var e=$(id);e.textContent=t;e.style.display=t?"block":"none"}
 
+function tg(t){return t?fmt(t):""}
+function pd(x){
+ var r=[];
+ if(x.status==="gudang"&&!x.spk)r.push(["No. SPK","-"]);
+ if(x.spk||x.lokasi||x.no_ipb||x.pengambil||x.tgl_keluar)r.push(["No. SPK",x.spk],["Lokasi proyek",x.lokasi],["Tgl keluar",tg(x.tgl_keluar)],["No. IPB",x.no_ipb],["Pengambil",x.pengambil]);
+ if(x.tgl_kosong||x.no_stt||x.pengantar)r.push(["Tgl kosong masuk",tg(x.tgl_kosong)],["No. STT",x.no_stt],["Pengantar",x.pengantar]);
+ if(x.status==="kembali")r.push(["No. STT supplier",x.no_stt_sup],["Penerima supplier",x.penerima]);
+ return r.filter(function(a){return a[1]});
+}
 function det(x){
- var r=[["No. SPK",x.spk],["Lokasi",x.lokasi]].filter(function(a){return a[1]});
+ var r=pd(x);
+ if(!r.length)return "";
  return '<dl class="det">'+r.map(function(a){return '<dt>'+a[0]+'</dt><dd>'+esc(a[1])+'</dd>'}).join("")+'</dl>';
 }
 var NOMOR_WA="6289652005352";
@@ -1041,10 +1067,11 @@ function waBtn(x){
  var t="Halo, sewa tabung oksigen nomor "+x.nomor+" (SPK "+x.spk+", lokasi "+x.lokasi+") "+w+" (batas kembali "+fmt(x.batas)+"). Mohon segera dikembalikan. Terima kasih.";
  return '<a class="s wa" target="_blank" rel="noopener" href="https://wa.me/'+no+'?text='+encodeURIComponent(t)+'">'+IC.wa+'<span>Kirim WA</span></a>';
 }
-function mo(x){return [["No. SPK",x.spk],["Lokasi",x.lokasi]].filter(function(a){return a[1]}).map(function(a){return '<td class="mo" data-l="'+a[0]+'"><div class="v">'+esc(a[1])+'</div></td>'}).join("")}
+function mo(x){return [["No. SJ",x.no_sj],["Supplier",x.supplier]].concat(pd(x)).filter(function(a){return a[1]}).map(function(a){return '<td class="mo" data-l="'+a[0]+'"><div class="v">'+esc(a[1])+'</div></td>'}).join("")}
 function render(){
  var q=($("q").value||"").trim().toLowerCase();
- function match(x){return !q||[x.nomor,x.supplier,x.spk,x.lokasi].join(" ").toLowerCase().indexOf(q)>=0}
+ var qp=pisah(q),qs=qp?[qp.b,qp.n]:[q];
+ function match(x){if(!q)return true;var t=[x.nomor,x.barcode,x.supplier,x.spk,x.lokasi].join(" ").toLowerCase();return qs.some(function(k){return t.indexOf(k)>=0})}
  var akt=items.filter(function(x){return x.status!=="kembali"}),rw=items.filter(function(x){return x.status==="kembali"});
  var lewat=akt.filter(function(x){return sisa(x.batas)<0}).length;
  var hampir=akt.filter(function(x){var s=sisa(x.batas);return s>=0&&s<=7}).length;
@@ -1059,18 +1086,18 @@ function render(){
   if(!akt.length){h='<div class="empty">'+(q||flt?'Tidak ditemukan.':'Belum ada tabung aktif.')+'</div>'}
   else{h='<table><tr><th>No. tabung</th><th>Diterima</th><th>Batas kembali</th><th>Sisa waktu</th><th>Posisi</th><th>Aksi</th></tr>'+akt.map(function(x){
    var s=sisa(x.batas),bd=s<0?'<span class="b er">Terlambat '+(-s)+' hari</span>':s<=3?'<span class="b er">'+s+' hari lagi</span>':s<=7?'<span class="b wn">'+s+' hari lagi</span>':'<span class="b ok">'+s+' hari lagi</span>';
-   var pos=x.status==="mandor"?'<span class="b wn2">Diambil</span><div class="dsk">'+det(x)+'</div>':'<span class="b ok">Di gudang</span>';
+   var pos=x.status==="mandor"?'<span class="b wn2">Diambil proyek</span><div class="dsk">'+det(x)+'</div>':x.status==="kosong"?'<span class="b ok">Kosong, sudah masuk dari proyek</span><div class="dsk">'+det(x)+'</div>':'<span class="b ok">Di gudang (isi)</span><div class="dsk">'+det(x)+'</div>';
    var ac=x.status==="kosong"?'':'<button class="s" data-a="'+(x.status==="mandor"?"kosong":"mandor")+'" data-i="'+x.id+'">'+IC.mandor+'<span>'+(x.status==="mandor"?"Kosong diterima":"Diambil")+'</span></button>';
    ac+='<button class="s" data-a="supplier" data-i="'+x.id+'">'+IC.supplier+'<span>Kembalikan ke supplier</span></button>';
    ac=waBtn(x)+ac;
-   return '<tr class="'+(x.status==="mandor"?'dm':'')+(s<=3?' dr':'')+'"><td><b>'+esc(x.nomor)+'</b>'+(x.supplier?'<div class="note">'+esc(x.supplier)+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Sisa waktu"><div class="v">'+bd+'</div></td><td data-l="Posisi"><div class="v">'+pos+'</div></td>'+(x.status==="mandor"?mo(x):"")+'<td class="ac"><div class="acts">'+ac+'</div></td></tr>'}).join("")+'</table>'}
+   return '<tr class="'+(x.status==="mandor"?'dm':x.status==="kosong"?'dk':'')+(s<=3&&x.status!=="kosong"?' dr':'')+'"><td><div class="note" style="margin:0">No. Tabung</div><b>'+esc(ef(x).n)+'</b><div class="note">No. Barcode: '+(ef(x).b?'<b>'+esc(ef(x).b)+'</b>':'-')+'</div>'+(x.supplier||x.no_sj?'<div class="note dsk">'+esc([x.supplier,x.no_sj?"SJ "+x.no_sj:""].filter(Boolean).join(" · "))+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Sisa waktu"><div class="v">'+bd+'</div></td><td data-l="Posisi"><div class="v">'+pos+'</div></td>'+mo(x)+'<td class="ac"><div class="acts">'+ac+'</div></td></tr>'}).join("")+'</table>'}
  }else{
   rw=rw.filter(match);rw.sort(function(a,b){return (b.kembali||"")<(a.kembali||"")?-1:1});
   if(!rw.length){h='<div class="empty">'+(q?'Tidak ditemukan.':'Belum ada riwayat pengembalian.')+'</div>'}
   else{h='<table><tr><th>No. tabung</th><th>Diterima</th><th>Batas kembali</th><th>Dikembalikan</th><th>Keterangan</th><th>Pemakaian terakhir</th></tr>'+rw.map(function(x){
    var t=x.kembali>x.batas?'<span class="b er">Terlambat '+Math.round((par(x.kembali)-par(x.batas))/864e5)+' hari</span>':'<span class="b ok">Tepat waktu</span>';
-   var pk=x.spk?det(x):'-';
-   return '<tr><td><b>'+esc(x.nomor)+'</b>'+(x.supplier?'<div class="note">'+esc(x.supplier)+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Dikembalikan"><div class="v">'+fmt(x.kembali)+'</div></td><td data-l="Keterangan"><div class="v">'+t+'</div></td><td class="dsk" data-l="Pemakaian terakhir"><div class="v">'+pk+'</div></td>'+(x.spk?mo(x):"")+'</tr>'}).join("")+'</table>'}
+   var pk=pd(x).length?det(x):'-';
+   return '<tr><td><div class="note" style="margin:0">No. Tabung</div><b>'+esc(ef(x).n)+'</b><div class="note">No. Barcode: '+(ef(x).b?'<b>'+esc(ef(x).b)+'</b>':'-')+'</div>'+(x.supplier||x.no_sj?'<div class="note dsk">'+esc([x.supplier,x.no_sj?"SJ "+x.no_sj:""].filter(Boolean).join(" · "))+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Dikembalikan"><div class="v">'+fmt(x.kembali)+'</div></td><td data-l="Keterangan"><div class="v">'+t+'</div></td><td class="dsk" data-l="Pemakaian terakhir"><div class="v">'+pk+'</div></td>'+mo(x)+'</tr>'}).join("")+'</table>'}
  }
  if(tab==="aktif"&&flt)h='<div class="fchip"><span>Filter: <b>'+FLT[flt]+'</b></span><button type="button" class="fclr">✕ Hapus filter</button></div>'+h;
  $("list").innerHTML=h;
@@ -1090,9 +1117,10 @@ function sb(path,o){
   return r.text().then(function(t){return t?JSON.parse(t):null});
  });
 }
+function Z(v){v=String(v==null?"":v).trim().toUpperCase();return v==="0"?"":v}
 function U(v){return String(v==null?"":v).trim().toUpperCase()}
-function toDb(x){return {id:x.id,nomor:U(x.nomor),supplier:U(x.supplier),diterima:x.diterima||null,batas:x.batas||null,status:x.status,mandor:U(x.mandor),spk:U(x.spk),lokasi:U(x.lokasi),kembali:x.kembali||null,no_sj:U(x.no_sj),tgl_keluar:x.tgl_keluar||null,no_ipb:U(x.no_ipb),pengambil:U(x.pengambil),tgl_kosong:x.tgl_kosong||null,no_stt:U(x.no_stt),pengantar:U(x.pengantar),no_stt_sup:U(x.no_stt_sup),penerima:U(x.penerima)}}
-function fromDb(rows){return (rows||[]).map(function(r){var d=norm(r.diterima);return {id:r.id,nomor:U(r.nomor),supplier:U(r.supplier),diterima:d,batas:norm(r.batas)||(d?plus1m(d):""),status:r.status||"gudang",mandor:U(r.mandor),spk:U(r.spk),lokasi:U(r.lokasi),kembali:norm(r.kembali),no_sj:U(r.no_sj),tgl_keluar:norm(r.tgl_keluar),no_ipb:U(r.no_ipb),pengambil:U(r.pengambil),tgl_kosong:norm(r.tgl_kosong),no_stt:U(r.no_stt),pengantar:U(r.pengantar),no_stt_sup:U(r.no_stt_sup),penerima:U(r.penerima)}})}
+function toDb(x){var o={id:x.id,nomor:U(x.nomor),supplier:U(x.supplier),diterima:x.diterima||null,batas:x.batas||null,status:x.status,mandor:U(x.mandor),spk:U(x.spk),lokasi:U(x.lokasi),kembali:x.kembali||null,no_sj:U(x.no_sj),tgl_keluar:x.tgl_keluar||null,no_ipb:U(x.no_ipb),pengambil:U(x.pengambil),tgl_kosong:x.tgl_kosong||null,no_stt:U(x.no_stt),pengantar:U(x.pengantar),no_stt_sup:U(x.no_stt_sup),penerima:U(x.penerima)};if(x.barcode)o.barcode=U(x.barcode);return o}
+function fromDb(rows){return (rows||[]).map(function(r){var d=norm(r.diterima);return {id:r.id,nomor:U(r.nomor),supplier:U(r.supplier),diterima:d,batas:norm(r.batas)||(d?plus1m(d):""),status:r.status||"gudang",mandor:Z(r.mandor),spk:Z(r.spk),lokasi:Z(r.lokasi),kembali:norm(r.kembali),no_sj:Z(r.no_sj),tgl_keluar:norm(r.tgl_keluar),no_ipb:Z(r.no_ipb),pengambil:Z(r.pengambil),tgl_kosong:norm(r.tgl_kosong),no_stt:Z(r.no_stt),pengantar:Z(r.pengantar),no_stt_sup:Z(r.no_stt_sup),penerima:Z(r.penerima),barcode:U(r.barcode)}})}
 function upsert(xs){return sb("tabung?on_conflict=id",{method:"POST",prefer:"resolution=merge-duplicates,return=minimal",body:xs.map(toDb)})}
 function err(e){
  var m="Gagal terhubung ke database Supabase"+(e&&e.message?": "+e.message:".");
@@ -1133,32 +1161,47 @@ function pushAuto(){
  evs.forEach(function(ev){document.addEventListener(ev,go,true)});
 }
 pushAuto();
-["nos","sup","lok","spk","ssup","q","lno","sj","ssj","ipb","pgm","stt","png","nss","pen"].forEach(function(i){
+["snt","sup","lok","spk","ssup","q","lno","sj","ssj","ipb","pgm","stt","png","nss","pen"].forEach(function(i){
  $(i).addEventListener("input",function(){var v=this.value,u=v.toUpperCase();if(v!==u){var a=this.selectionStart,b=this.selectionEnd;this.value=u;try{this.setSelectionRange(a,b)}catch(e){}}})
 });
+$("nrows").addEventListener("input",function(e){var t=e.target,v=t.value,u=v.toUpperCase();if(v!==u){var a=t.selectionStart,b=t.selectionEnd;t.value=u;try{t.setSelectionRange(a,b)}catch(x){}}});
 var T0=Date.now();
 function doneLoad(){var l=$("ld");if(!l||l.className==="off")return;setTimeout(function(){l.className="off";setTimeout(function(){if(l.parentNode)l.parentNode.removeChild(l)},500)},Math.max(0,600-(Date.now()-T0)))}
 function load(){return readAll().then(function(v){items=fromDb(v);render();show("warn","")}).catch(function(e){err(e)}).then(doneLoad)}
 function enqueue(fn){busy++;Q=Q.then(fn).then(function(){show("warn","")},function(e){err(e);return load()}).then(function(){busy--});return Q}
 function save(x){return enqueue(function(){return upsert([x])})}
 function addRows(xs){var ok=false;return enqueue(function(){return upsert(xs).then(function(){ok=true})}).then(function(){return ok})}
-function kosongTambah(){$("nos").value="";$("sup").value="";$("tgl").value="";$("sj").value=""}
+function barisHtml(){return '<div class="row nr" style="margin-bottom:8px"><input class="nn" placeholder="No. tabung (wajib)" autocomplete="off"><input class="nb" placeholder="No. barcode (opsional)" autocomplete="off"></div>'}
+function resetBaris(n){$("nrows").innerHTML=new Array((n||3)+1).join(barisHtml())}
+function kosongTambah(){resetBaris(1);$("sup").value="";$("tgl").value="";$("sj").value=""}
+$("addrow").onclick=function(){$("nrows").insertAdjacentHTML("beforeend",barisHtml());var r=$("nrows").querySelectorAll(".nn");r[r.length-1].focus()};
+function pisah(s){var m=String(s||"").trim().match(/^(.+?)\s*\/\s*(.+)$/);return m?{b:m[1].trim(),n:m[2].trim()}:null}
+function ef(x){var p=pisah(x.nomor);return {n:p?p.n:x.nomor,b:x.barcode||(p?p.b:"")}}
+function kodeAktif(k){k=String(k||"").toLowerCase();if(!k)return false;return items.some(function(x){if(x.status==="kembali")return false;var e=ef(x);return e.n.toLowerCase()===k||e.b.toLowerCase()===k||x.nomor.toLowerCase()===k})}
 function find(id){return items.filter(function(x){return x.id===id})[0]}
 function uid(){return "t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
 $("tambah").onclick=function(){
  show("err","");
- var list=$("nos").value.split(/[\n,;]+/).map(function(s){return s.trim()}).filter(Boolean);
+ var rows=$("nrows").querySelectorAll(".nr"),list=[];
+ for(var i=0;i<rows.length;i++){
+  var n=rows[i].querySelector(".nn").value.trim(),b=rows[i].querySelector(".nb").value.trim();
+  var pp=pisah(n);if(pp&&!b){b=pp.b;n=pp.n}
+  if(!n&&!b)continue;
+  if(!n)return show("err","Nomor tabung wajib diisi (barcode "+b+" belum punya nomor tabung).");
+  list.push({n:n,b:b});
+ }
  if(!list.length)return show("err","Isi minimal satu nomor tabung.");
  if(!$("tgl").value)return show("err","Isi tanggal diterima.");
  if(!$("sup").value.trim())return show("err","Nama supplier wajib diisi.");
  var seen={},dup=[],ok=[];
- list.forEach(function(n){var key=n.toLowerCase();
-  if(seen[key])return;seen[key]=1;
-  if(items.some(function(x){return x.status!=="kembali"&&x.nomor.toLowerCase()===key}))dup.push(n);else ok.push(n)});
- if(dup.length)return show("err","Nomor ini masih tercatat di daftar aktif: "+dup.join(", ")+". Periksa lagi nomornya.");
- var tg=$("tgl").value,b=plus1m(tg),sp=$("sup").value.trim();
- var xs=ok.map(function(n){return {id:uid(),nomor:U(n),diterima:tg,batas:b,supplier:U(sp),status:"gudang",mandor:"",spk:"",lokasi:"",kembali:"",no_sj:U($("sj").value)}});xs.forEach(function(x){items.push(x)});konfirmasi(xs,addRows(xs));
+ list.forEach(function(r){var key=r.n.toLowerCase(),kb=r.b.toLowerCase();
+  if(seen[key]||(kb&&seen[kb]))return;
+  seen[key]=1;if(kb)seen[kb]=1;
+  if(kodeAktif(r.n)||(r.b&&kodeAktif(r.b)))dup.push(r.n);else ok.push(r)});
+ if(dup.length)return show("err","Nomor atau barcode ini masih tercatat di daftar aktif: "+dup.join(", ")+". Periksa lagi nomornya.");
+ var tg=$("tgl").value,bt=plus1m(tg),sp=$("sup").value.trim();
+ var xs=ok.map(function(r){return {id:uid(),nomor:U(r.n),barcode:U(r.b),diterima:tg,batas:bt,supplier:U(sp),status:"gudang",mandor:"",spk:"",lokasi:"",kembali:"",no_sj:U($("sj").value)}});xs.forEach(function(x){items.push(x)});konfirmasi(xs,addRows(xs));
  kosongTambah();$("dlg5").close();render();
 };
 $("q").oninput=function(){render()};$("cari").onclick=function(){render()};
@@ -1173,12 +1216,37 @@ function statTap(f){
 $("stats").onclick=function(e){var c=e.target.closest(".stat");if(c)statTap(c.dataset.f)};
 $("stats").onkeydown=function(e){if(e.key!=="Enter"&&e.key!==" ")return;var c=e.target.closest(".stat");if(!c)return;e.preventDefault();statTap(c.dataset.f)};
 $("t2").onclick=function(){tab="riwayat";render()};
+
+function nextNum(t){
+ var re=/\d+/g,m,g=[];
+ while((m=re.exec(t))!==null)g.push({i:m.index,t:m[0]});
+ if(!g.length)return "";
+ var k=g.length-1;
+ if(g.length>1&&/^(19|20)\d\d$/.test(g[k].t))k=0;
+ var d=g[k].t,n=String(+d+1);
+ while(n.length<d.length)n="0"+n;
+ return t.slice(0,g[k].i)+n+t.slice(g[k].i+d.length);
+}
+function autoNo(fn,fd,tg){
+ var ada=items.filter(function(x){return x[fn]&&x[fd]});
+ if(!ada.length)return {v:"",h:"Belum ada nomor sebelumnya. Isi manual."};
+ var sm=ada.filter(function(x){return x[fd]===tg})[0];
+ if(sm)return {v:sm[fn],h:"Otomatis: sama dengan nomor tanggal "+fmt(tg)+". Bisa diubah."};
+ var l=ada[0];ada.forEach(function(x){if(x[fd]>l[fd])l=x});
+ var nx=nextNum(l[fn]);
+ return {v:nx,h:nx?"Otomatis: nomor terakhir "+l[fn]+" ("+fmt(l[fd])+"). Bisa diubah.":"Nomor terakhir "+l[fn]+". Isi manual."};
+}
+function isiAuto(id,hid,fn,fd,tg){var e=$(id),a=autoNo(fn,fd,tg);e.value=a.v;e.dataset.m="";$(hid).textContent=a.h}
+$("ipb").addEventListener("input",function(){this.dataset.m="1"});
+$("stt").addEventListener("input",function(){this.dataset.m="1"});
+$("tk").addEventListener("change",function(){if(!$("ipb").dataset.m)isiAuto("ipb","ipbh","no_ipb","tgl_keluar",this.value)});
+$("ktgl").addEventListener("change",function(){if(!$("stt").dataset.m)isiAuto("stt","stth","no_stt","tgl_kosong",this.value)});
 function aksiKlik(e){
  var b=e.target.closest("button[data-a]");if(!b)return;
  var x=find(b.getAttribute("data-i"));if(!x)return;var a=b.getAttribute("data-a");
- if(a==="mandor"){cur=x;$("dno").textContent="Tabung "+x.nomor;spkReset();$("lok").value="";$("tk").value=today();$("ipb").value="";$("pgm").value="";show("derr","");$("dlg").showModal()}
+ if(a==="mandor"){cur=x;$("dno").textContent="Tabung "+x.nomor;spkReset();$("lok").value="";$("tk").value=today();isiAuto("ipb","ipbh","no_ipb","tgl_keluar",$("tk").value);$("pgm").value="";show("derr","");$("dlg").showModal()}
 
- else if(a==="kosong"){cur=x;$("kno").textContent="Tabung "+x.nomor;$("ktgl").value=today();$("stt").value="";$("png").value="";show("kerr","");$("dlg8").showModal()}
+ else if(a==="kosong"){cur=x;$("kno").textContent="Tabung "+x.nomor;$("ktgl").value=today();isiAuto("stt","stth","no_stt","tgl_kosong",$("ktgl").value);$("png").value="";show("kerr","");$("dlg8").showModal()}
  else if(a==="supplier"){
   cur=x;$("sno").textContent="Tabung "+x.nomor;$("stgl").value=today();$("nss").value="";$("pen").value="";show("serr","");$("dlg2").showModal()}
 }
@@ -1228,32 +1296,36 @@ $("sim").onclick=function(){
 };
 var sc=null,last="",lastT=0,added=0;
 var blockCode="",blockUntil=0;
-function nomorAktif(n){var k=n.toLowerCase();return items.some(function(x){return x.status!=="kembali"&&x.nomor.toLowerCase()===k})}
+function nomorAktif(n){return kodeAktif(n)}
 function previewBatas(){var t=$("stgl2").value;$("sbts").textContent=t?"Batas kembali: "+fmt(plus1m(t)):""}
 function addNo(code){
  code=String(code||"").trim();if(!code)return;
  if($("dlg4").open||$("dlg7").open)return;
  var now=Date.now();
- if(code===blockCode&&now<blockUntil)return;
+ var p=pisah(code);
+ if((code===blockCode||(p&&p.b===blockCode))&&now<blockUntil)return;
  if(code===last&&now-lastT<3000)return;
  last=code;lastT=now;
- if(nomorAktif(code)){$("sinfo").textContent="Tabung "+code+" sudah ada di daftar aktif.";umpan(false,"ov1");return}
+ if(p?(kodeAktif(p.n)||kodeAktif(p.b)):kodeAktif(code)){$("sinfo").textContent="Tabung "+code+" sudah ada di daftar aktif.";umpan(false,"ov1");return}
  umpan(true,"ov1");
- $("sc-no").textContent=code;
+ $("sc-no").textContent=p?p.b:code;
+ $("snt").value=p?p.n:"";
  $("ssup").value="";
  $("stgl2").value="";
  show("serr2","");previewBatas();
  $("dlg4").showModal();
+ try{$("snt").focus()}catch(e){}
 }
 $("stgl2").onchange=previewBatas;$("stgl2").oninput=previewBatas;
 $("sbat2").onclick=function(){$("dlg4").close()};
-$("dlg4").addEventListener("close",function(){$("ssup").value="";$("ssj").value="";$("stgl2").value="";blockCode=$("sc-no").textContent;blockUntil=Date.now()+6000});
+$("dlg4").addEventListener("close",function(){$("snt").value="";$("ssup").value="";$("ssj").value="";$("stgl2").value="";blockCode=$("sc-no").textContent;blockUntil=Date.now()+6000});
 $("stam").onclick=function(){
- var n=$("sc-no").textContent,sp=$("ssup").value.trim(),tg=$("stgl2").value;
+ var bc=$("sc-no").textContent,n=$("snt").value.trim(),sp=$("ssup").value.trim(),tg=$("stgl2").value;
+ if(!n)return show("serr2","Nomor tabung wajib diisi.");
  if(!sp)return show("serr2","Nama supplier wajib diisi.");
  if(!tg)return show("serr2","Isi tanggal diterima.");
- if(nomorAktif(n))return show("serr2","Tabung "+n+" sudah ada di daftar aktif.");
- var x={id:uid(),nomor:U(n),diterima:tg,batas:plus1m(tg),supplier:U(sp),status:"gudang",mandor:"",spk:"",lokasi:"",kembali:"",no_sj:U($("ssj").value)};
+ if(kodeAktif(n)||(U(bc)!==U(n)&&kodeAktif(bc)))return show("serr2","Tabung "+n+" sudah ada di daftar aktif.");
+ var x={id:uid(),nomor:U(n),barcode:U(bc),diterima:tg,batas:plus1m(tg),supplier:U(sp),status:"gudang",mandor:"",spk:"",lokasi:"",kembali:"",no_sj:U($("ssj").value)};
  items.push(x);konfirmasi([x],addRows([x]));render();
  added++;$("sinfo").textContent="Tabung "+n+" ditambahkan ("+added+" tabung). Arahkan ke barcode berikutnya.";
  $("dlg4").close();
@@ -1321,17 +1393,35 @@ function aksiHtml(x){
  ac=waBtn(x)+ac;
  return ac?'<div class="acts" style="margin-top:14px">'+ac+'</div>':"";
 }
+function bv(l,v){return baris(l,v?esc(v):'<span style="color:var(--mu);font-weight:500">-</span>')}
+function seksi(j,rs){return '<div style="margin-top:16px;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--pr)">'+j+'</div>'+rs.join("")}
 function tampilLacak(code){
  curLacak=code;
- var k=code.toLowerCase(),m=items.filter(function(x){return x.nomor.toLowerCase()===k});
+ var pl=pisah(code),ks=(pl?[pl.b,pl.n]:[code]).map(function(v){return v.toLowerCase()}),flds=function(x){var e=ef(x);return [e.n.toLowerCase(),e.b.toLowerCase()]},m=items.filter(function(x){var f=flds(x);return ks.some(function(k){return k&&f.indexOf(k)>=0})});
+ if(!m.length)m=items.filter(function(x){var f=flds(x);return ks.some(function(k){return k&&f.some(function(v){return v.indexOf(k)>=0})})});
  var x=m.filter(function(y){return y.status!=="kembali"})[0];
  if(!x){m.sort(function(a,b){return (b.kembali||"")<(a.kembali||"")?-1:1});x=m[0]}
- if(!x){$("lhasil").innerHTML='<div class="msg" style="display:block"><b>'+esc(code)+'</b> tidak ditemukan di daftar tabung.</div>';return false}
- var st,sw;
- if(x.status==="kembali"){st='<span class="b ok">Sudah dikembalikan</span>';sw=x.kembali>x.batas?'<span class="b er">Terlambat '+Math.round((par(x.kembali)-par(x.batas))/864e5)+' hari</span>':'<span class="b ok">Tepat waktu</span>'}
- else{var s=sisa(x.batas);st=x.status==="mandor"?'<span class="b pr">Diambil</span>':'<span class="b ok">Di gudang</span>';sw=s<0?'<span class="b er">Terlambat '+(-s)+' hari</span>':s<=7?'<span class="b wn">'+s+' hari lagi</span>':'<span class="b ok">'+s+' hari lagi</span>'}
- var pos=x.status==="kembali"?"Sudah di supplier":x.status==="mandor"?esc(x.lokasi||"-"):"Di gudang";
- $("lhasil").innerHTML='<div style="font-size:24px;font-weight:800;margin:10px 0 6px;word-break:break-all;color:var(--pr)">'+esc(x.nomor)+'</div>'+baris("Status",st)+baris(x.status==="kembali"?"Ketepatan":"Sisa waktu",sw)+baris("Lokasi",pos)+baris("No. SPK",esc(x.spk||"-"))+baris("Supplier",esc(x.supplier||"-"))+baris("Diterima",fmt(x.diterima))+baris("Batas kembali",fmt(x.batas))+(x.status==="kembali"?baris("Dikembalikan",fmt(x.kembali)):"")+aksiHtml(x);
+ if(!x){$("lhasil").innerHTML='<div class="msg" style="display:block">Nomor <b>'+esc(code)+'</b> tidak ditemukan di daftar tabung.</div>';return false}
+ var st,sw,swl,pos;
+ if(x.status==="kembali"){
+  st='<span class="b ok">Sudah dikembalikan ke supplier</span>';swl="Ketepatan";
+  sw=x.kembali>x.batas?'<span class="b er">Terlambat '+Math.round((par(x.kembali)-par(x.batas))/864e5)+' hari</span>':'<span class="b ok">Tepat waktu</span>';
+  pos="Sudah di supplier";
+ }else{
+  var s=sisa(x.batas);swl="Sisa waktu";
+  st=x.status==="mandor"?'<span class="b wn2">Diambil proyek</span>':x.status==="kosong"?'<span class="b ok">Kosong, sudah masuk dari proyek</span>':'<span class="b ok">Di gudang (tabung isi)</span>';
+  sw=s<0?'<span class="b er">Terlambat '+(-s)+' hari</span>':s===0?'<span class="b er">Jatuh tempo hari ini</span>':s<=7?'<span class="b wn">'+s+' hari lagi</span>':'<span class="b ok">'+s+' hari lagi</span>';
+  pos=x.status==="mandor"?"Di proyek"+(x.lokasi?": "+x.lokasi:"")+(x.spk?" (SPK "+x.spk+")":""):x.status==="kosong"?"Di gudang, tabung kosong (menunggu dikembalikan ke supplier)":"Di gudang, tabung isi";
+ }
+ var h='<div class="note" style="margin:10px 0 0">No. Tabung</div><div style="font-size:24px;font-weight:800;margin:0 0 2px;word-break:break-all;color:var(--pr)">'+esc(ef(x).n)+'</div>';
+ h+='<div class="note" style="margin:0 0 4px">No. Barcode: <b>'+(ef(x).b?esc(ef(x).b):'-')+'</b></div>';
+ h+=seksi("Status",[baris("Status",st),baris(swl,sw),bv("Posisi sekarang",pos)]);
+ h+=seksi("Diterima dari supplier",[bv("Supplier",x.supplier),bv("No. SJ",x.no_sj),bv("Tanggal diterima",x.diterima?fmt(x.diterima):""),bv("Batas kembali",x.batas?fmt(x.batas):"")]);
+ if(x.status==="gudang"||x.spk||x.lokasi||x.no_ipb||x.pengambil||x.tgl_keluar)h+=seksi("Keluar untuk proyek",[bv("No. SPK",x.spk),bv("Lokasi proyek",x.lokasi),bv("Tanggal keluar",x.tgl_keluar?fmt(x.tgl_keluar):""),bv("No. IPB",x.no_ipb),bv("Pengambil",x.pengambil)]);
+ if(x.tgl_kosong||x.no_stt||x.pengantar)h+=seksi("Kosong masuk dari proyek",[bv("Tanggal masuk",x.tgl_kosong?fmt(x.tgl_kosong):""),bv("No. STT",x.no_stt),bv("Pengantar",x.pengantar)]);
+ if(x.status==="kembali")h+=seksi("Dikembalikan ke supplier",[bv("Tanggal dikembalikan",x.kembali?fmt(x.kembali):""),bv("No. STT supplier",x.no_stt_sup),bv("Penerima (supplier)",x.penerima)]);
+ if(m.length>1)h+='<p class="note" style="margin-top:12px">Nomor ini tercatat '+m.length+' kali (termasuk riwayat lama). Yang ditampilkan adalah catatan yang sedang aktif atau terbaru.</p>';
+ $("lhasil").innerHTML=h+aksiHtml(x);
  return true;
 }
 function lacak(code){
@@ -1380,11 +1470,11 @@ function lap(thn){
     sm[0]++;if(out)sm[1]++;else sm[2]++;if(ko)sm[3]++;if(kb)sm[4]++;
     h+='<tr>'+td(i+j+1)+(j?'':td(dx(x.diterima),"",n)+td(x.no_sj,"",n)+td(x.supplier,"",n))+td(x.nomor,"nt")+td(1)
      +SP+td(dx(x.tgl_keluar))+td(out?x.spk:"")+td(out?x.no_ipb:"")+td(out?x.pengambil:"")+td(out?1:"")
-     +SP+td(out?0:1,"nt")
+     +SP+td(out?"-":1,"nt")
      +SP+td(dx(x.tgl_kosong))+td(ko?x.spk:"")+td(ko?x.no_stt:"")+td(ko?x.pengantar:"")+td(ko?1:"")
      +SP+td(dx(x.kembali))+td(kb?x.no_stt_sup:"")+td(kb?x.penerima:"")+td(kb?x.nomor:"")+td(kb?1:"")+'</tr>';
    });
-   h+='<tr class="t"><td></td>'+bl(4)+td(sm[0])+SP+bl(4)+td(sm[1])+SP+td(sm[2])+SP+bl(4)+td(sm[3])+SP+bl(4)+td(sm[4])+'</tr></table>';
+   h+='<tr class="t"><td></td>'+bl(4)+td(sm[0])+SP+bl(4)+td(sm[1]||"-")+SP+td(sm[2]||"-")+SP+bl(4)+td(sm[3]||"-")+SP+bl(4)+td(sm[4]||"-")+'</tr></table>';
   }
  });
  return xs.length?h:h+'<p>Tidak ada data untuk tahun ini.</p>';
@@ -1397,6 +1487,7 @@ $("lcet").onclick=function(){$("rpt").innerHTML=lap($("lth").value);$("dlg9").cl
 $("kbat").onclick=function(){$("dlg8").close()};
 $("ksim").onclick=function(){if(!$("ktgl").value)return show("kerr","Isi tanggal masuk dari proyek.");cur.status="kosong";cur.tgl_kosong=$("ktgl").value;cur.no_stt=$("stt").value.trim();cur.pengantar=$("png").value.trim();save(cur);$("dlg8").close();render()};
 
+resetBaris(1);
 render();
 if(SB_URL.indexOf("PASTE_")>=0||SB_KEY.indexOf("PASTE_")>=0){show("warn","SB_URL dan SB_KEY Supabase belum diisi di file index.html.");doneLoad()}
 else{
