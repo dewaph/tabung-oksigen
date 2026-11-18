@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"></noscript>
 <script>(function(){try{var t=localStorage.getItem("tabung_tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()</script>
 <style>
 :root {
@@ -802,11 +802,26 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
  body{background:#fff!important}
  #rpt{display:block;font:9px/1.25 Calibri,Arial,sans-serif;color:#000}
 }
+.pgr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 4px;font-size:13px;color:var(--mu)}
+.pgr span{text-align:center;flex:1}
+.pgb{background:var(--card);color:var(--pr);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;font-weight:600;cursor:pointer;font-size:13px}
+.pgb:disabled{opacity:.4;cursor:default}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 <div id="ld" role="status" aria-live="polite"><div class="ldbox"><div class="cyl"><svg viewBox="0 0 64 96" aria-hidden="true"><rect x="19" y="3" width="26" height="7" rx="3.5" fill="var(--pr)"/><rect x="28" y="9" width="8" height="13" rx="2" fill="var(--pr)"/><rect x="10" y="20" width="44" height="73" rx="21" fill="var(--pr)"/><rect x="10" y="50" width="44" height="7" fill="var(--bg)"/><rect x="18" y="31" width="6" height="32" rx="3" fill="#fff" opacity=".28"/></svg><i class="bb b1"></i><i class="bb b2"></i><i class="bb b3"></i><i class="bb b4"></i></div><p>Memuat data tabung<span class="dots"></span></p><div class="bar"><span></span></div></div></div>
+<script>(function(){
+var l=document.getElementById("ld"),er=[];
+function pesan(t){var p=l&&l.querySelector("p");if(!p)return;p.textContent=t;var b=document.createElement("button");b.textContent="Muat ulang";b.style.cssText="margin-top:14px;padding:10px 18px;border-radius:10px;border:0;background:#2563eb;color:#fff;font-weight:700;font-size:15px";b.onclick=function(){location.reload()};if(!l.querySelector("button"))p.parentNode.appendChild(b)}
+window.addEventListener("error",function(e){er.push((e.message||"error")+(e.lineno?" (baris "+e.lineno+")":""))});
+window.addEventListener("unhandledrejection",function(e){er.push(String(e.reason&&e.reason.message||e.reason||"error"))});
+setTimeout(function(){
+ if(!l||l.className==="off"||!l.parentNode)return;
+ if(window.__appOk){l.className="off";return}
+ pesan("Aplikasi gagal dimulai"+(er.length?": "+er[0]:". Periksa koneksi internet lalu muat ulang."));
+},8000);
+})()</script>
 <main>
 <div class="top">
   <h1>Pengelolaan Tabung Oksigen</h1>
@@ -830,6 +845,8 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/></svg>
       <span>Lacak tabung</span>
     </button>
+    <button type="button" class="s" id="imp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg><span>Import Excel</span></button>
+    <button type="button" class="s" id="hps" style="color:var(--er);border-color:var(--er)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span>Hapus semua</span></button>
   </div>
 </div>
 
@@ -881,6 +898,8 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
     <span>Cari</span>
   </button>
 </div>
+<input type="file" id="impf" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+<div id="imsg" class="msg" style="display:none;margin:0 0 12px"></div>
 <div class="wrap" id="list"></div>
 </div>
 </main>
@@ -962,6 +981,18 @@ tr.dr td { border-bottom-color: color-mix(in srgb, var(--er) 30%, var(--bd)); }
 </div>
 </dialog>
 
+<dialog id="dlg8">
+<h2>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--er)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+  <span>Hapus semua data?</span>
+</h2>
+<p id="hpsmsg"></p>
+<div class="acts" style="margin-top:18px;justify-content:flex-end">
+  <button type="button" class="s" id="hpsbatal">Batal</button>
+  <button type="button" class="p" id="hpsya" style="background:var(--er);border-color:var(--er)">Hapus semua</button>
+</div>
+</dialog>
+
 <dialog id="dlg4">
 <h2>Tambahkan tabung ini?</h2>
 <p class="note">Barcode terbaca:</p>
@@ -1020,7 +1051,7 @@ if(window.parent!==window)btn.style.display="none";
 </script>
 <script>
 (function(){
-var Q=Promise.resolve(),busy=0,items=[],tab="aktif",cur=null,flt="";
+var Q=Promise.resolve(),busy=0,items=[],tab="aktif",cur=null,flt="",pg=1,pgKey="",PER=20,PG={html:""};
 var FLT={gudang:"Di gudang",mandor:"Diambil",dekat:"Hampir jatuh tempo (≤7 hari)",lewat:"Terlambat"};
 function fil(x){if(!flt)return true;var s=sisa(x.batas);return flt==="gudang"?x.status!=="mandor":flt==="mandor"?x.status==="mandor":flt==="dekat"?s>=0&&s<=7:s<0}
 var $=function(i){return document.getElementById(i)};
@@ -1068,7 +1099,15 @@ function waBtn(x){
  return '<a class="s wa" target="_blank" rel="noopener" href="https://wa.me/'+no+'?text='+encodeURIComponent(t)+'">'+IC.wa+'<span>Kirim WA</span></a>';
 }
 function mo(x){return [["No. SJ",x.no_sj],["Supplier",x.supplier]].concat(pd(x)).filter(function(a){return a[1]}).map(function(a){return '<td class="mo" data-l="'+a[0]+'"><div class="v">'+esc(a[1])+'</div></td>'}).join("")}
+function pager(n,key){
+ if(key!==pgKey){pgKey=key;pg=1}
+ var pages=Math.max(1,Math.ceil(n/PER));if(pg>pages)pg=pages;if(pg<1)pg=1;
+ var s=(pg-1)*PER,e=Math.min(n,s+PER);
+ PG.html=n>PER?'<div class="pgr"><button type="button" class="pgb" data-p="'+(pg-1)+'"'+(pg<=1?" disabled":"")+'>‹ Sebelumnya</button><span>Hal. '+pg+" / "+pages+" · "+(s+1)+"–"+e+" dari "+n+'</span><button type="button" class="pgb" data-p="'+(pg+1)+'"'+(pg>=pages?" disabled":"")+'>Berikutnya ›</button></div>':"";
+ return {s:s,e:e}
+}
 function render(){
+ PG={html:""};
  var q=($("q").value||"").trim().toLowerCase();
  var qp=pisah(q),qs=qp?[qp.b,qp.n]:[q];
  function match(x){if(!q)return true;var t=[x.nomor,x.barcode,x.supplier,x.spk,x.lokasi].join(" ").toLowerCase();return qs.some(function(k){return t.indexOf(k)>=0})}
@@ -1083,6 +1122,7 @@ function render(){
  var h;
  if(tab==="aktif"){
   akt=akt.filter(match).filter(fil);akt.sort(function(a,b){return a.batas<b.batas?-1:a.batas>b.batas?1:0});
+  var pa=pager(akt.length,"aktif|"+q+"|"+flt);akt=akt.slice(pa.s,pa.e);
   if(!akt.length){h='<div class="empty">'+(q||flt?'Tidak ditemukan.':'Belum ada tabung aktif.')+'</div>'}
   else{h='<table><tr><th>No. tabung</th><th>Diterima</th><th>Batas kembali</th><th>Sisa waktu</th><th>Posisi</th><th>Aksi</th></tr>'+akt.map(function(x){
    var s=sisa(x.batas),bd=s<0?'<span class="b er">Terlambat '+(-s)+' hari</span>':s<=3?'<span class="b er">'+s+' hari lagi</span>':s<=7?'<span class="b wn">'+s+' hari lagi</span>':'<span class="b ok">'+s+' hari lagi</span>';
@@ -1093,6 +1133,7 @@ function render(){
    return '<tr class="'+(x.status==="mandor"?'dm':x.status==="kosong"?'dk':'')+(s<=3&&x.status!=="kosong"?' dr':'')+'"><td><div class="note" style="margin:0">No. Tabung</div><b>'+esc(ef(x).n)+'</b><div class="note">No. Barcode: '+(ef(x).b?'<b>'+esc(ef(x).b)+'</b>':'-')+'</div>'+(x.supplier||x.no_sj?'<div class="note dsk">'+esc([x.supplier,x.no_sj?"SJ "+x.no_sj:""].filter(Boolean).join(" · "))+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Sisa waktu"><div class="v">'+bd+'</div></td><td data-l="Posisi"><div class="v">'+pos+'</div></td>'+mo(x)+'<td class="ac"><div class="acts">'+ac+'</div></td></tr>'}).join("")+'</table>'}
  }else{
   rw=rw.filter(match);rw.sort(function(a,b){return (b.kembali||"")<(a.kembali||"")?-1:1});
+  var pr=pager(rw.length,"riwayat|"+q);rw=rw.slice(pr.s,pr.e);
   if(!rw.length){h='<div class="empty">'+(q?'Tidak ditemukan.':'Belum ada riwayat pengembalian.')+'</div>'}
   else{h='<table><tr><th>No. tabung</th><th>Diterima</th><th>Batas kembali</th><th>Dikembalikan</th><th>Keterangan</th><th>Pemakaian terakhir</th></tr>'+rw.map(function(x){
    var t=x.kembali>x.batas?'<span class="b er">Terlambat '+Math.round((par(x.kembali)-par(x.batas))/864e5)+' hari</span>':'<span class="b ok">Tepat waktu</span>';
@@ -1100,7 +1141,9 @@ function render(){
    return '<tr><td><div class="note" style="margin:0">No. Tabung</div><b>'+esc(ef(x).n)+'</b><div class="note">No. Barcode: '+(ef(x).b?'<b>'+esc(ef(x).b)+'</b>':'-')+'</div>'+(x.supplier||x.no_sj?'<div class="note dsk">'+esc([x.supplier,x.no_sj?"SJ "+x.no_sj:""].filter(Boolean).join(" · "))+'</div>':'')+'</td><td data-l="Diterima"><div class="v">'+fmt(x.diterima)+'</div></td><td data-l="Batas kembali"><div class="v">'+fmt(x.batas)+'</div></td><td data-l="Dikembalikan"><div class="v">'+fmt(x.kembali)+'</div></td><td data-l="Keterangan"><div class="v">'+t+'</div></td><td class="dsk" data-l="Pemakaian terakhir"><div class="v">'+pk+'</div></td>'+mo(x)+'</tr>'}).join("")+'</table>'}
  }
  if(tab==="aktif"&&flt)h='<div class="fchip"><span>Filter: <b>'+FLT[flt]+'</b></span><button type="button" class="fclr">✕ Hapus filter</button></div>'+h;
+ h+=PG.html;
  $("list").innerHTML=h;
+ Array.prototype.forEach.call($("list").querySelectorAll(".pgb"),function(b){b.onclick=function(){pg=+b.getAttribute("data-p");render();try{$("list").scrollIntoView({block:"start"})}catch(e){}}});
  var fc=$("list").querySelector(".fclr");if(fc)fc.onclick=function(){flt="";render()};
  if(typeof curLacak!=="undefined"&&curLacak&&$("dlg6").open)tampilLacak(curLacak);
 }
@@ -1121,13 +1164,26 @@ function Z(v){v=String(v==null?"":v).trim().toUpperCase();return v==="0"?"":v}
 function U(v){return String(v==null?"":v).trim().toUpperCase()}
 function toDb(x){var o={id:x.id,nomor:U(x.nomor),supplier:U(x.supplier),diterima:x.diterima||null,batas:x.batas||null,status:x.status,mandor:U(x.mandor),spk:U(x.spk),lokasi:U(x.lokasi),kembali:x.kembali||null,no_sj:U(x.no_sj),tgl_keluar:x.tgl_keluar||null,no_ipb:U(x.no_ipb),pengambil:U(x.pengambil),tgl_kosong:x.tgl_kosong||null,no_stt:U(x.no_stt),pengantar:U(x.pengantar),no_stt_sup:U(x.no_stt_sup),penerima:U(x.penerima)};if(x.barcode)o.barcode=U(x.barcode);return o}
 function fromDb(rows){return (rows||[]).map(function(r){var d=norm(r.diterima);return {id:r.id,nomor:U(r.nomor),supplier:U(r.supplier),diterima:d,batas:norm(r.batas)||(d?plus1m(d):""),status:r.status||"gudang",mandor:Z(r.mandor),spk:Z(r.spk),lokasi:Z(r.lokasi),kembali:norm(r.kembali),no_sj:Z(r.no_sj),tgl_keluar:norm(r.tgl_keluar),no_ipb:Z(r.no_ipb),pengambil:Z(r.pengambil),tgl_kosong:norm(r.tgl_kosong),no_stt:Z(r.no_stt),pengantar:Z(r.pengantar),no_stt_sup:Z(r.no_stt_sup),penerima:Z(r.penerima),barcode:U(r.barcode)}})}
-function upsert(xs){return sb("tabung?on_conflict=id",{method:"POST",prefer:"resolution=merge-duplicates,return=minimal",body:xs.map(toDb)})}
+function upsert(xs,imp){return sb("tabung?on_conflict=id",{method:"POST",prefer:"resolution=merge-duplicates,return=minimal"+(imp?",import-spk":""),body:xs.map(toDb)})}
 function err(e){
  var m="Gagal terhubung ke database Supabase"+(e&&e.message?": "+e.message:".");
  if(e instanceof TypeError)m="Tidak bisa terhubung ke internet atau ke Supabase. Periksa koneksi dan SB_URL.";
  show("warn",m);
 }
-function readAll(){return sb("tabung?select=*&order=created_at.desc")}
+function sbHdr(c){var h={apikey:SB_KEY};if(SB_KEY.indexOf("eyJ")===0)h.Authorization="Bearer "+SB_KEY;if(c)h.Prefer="count=exact";return h}
+function sbOk(r){if(r.ok)return r;return r.json().catch(function(){return {}}).then(function(j){throw {message:j.message||("HTTP "+r.status)}})}
+function readAll(){
+ var P=1000,u=SB_URL+"/rest/v1/tabung?select=*&order=created_at.desc,id.asc&limit="+P+"&offset=";
+ function hal(o,c){var tm,tmo=new Promise(function(_,rej){tm=setTimeout(function(){rej({message:"Server Supabase tidak merespons (lebih dari 30 detik). Periksa koneksi atau status proyek Supabase."})},30000)});return Promise.race([fetch(u+o,{headers:sbHdr(c)}),tmo]).then(function(r){clearTimeout(tm);return sbOk(r)},function(e){clearTimeout(tm);throw e})}
+ return hal(0,true).then(function(r){
+  var tot=+((r.headers.get("content-range")||"").split("/")[1]);
+  return r.json().then(function(a){
+   if(a.length<P)return a;
+   if(tot>P){var ps=[];for(var o=P;o<tot;o+=P)ps.push(hal(o).then(function(x){return x.json()}));return Promise.all(ps).then(function(rest){return a.concat.apply(a,rest)})}
+   function lanjut(acc,o){return hal(o).then(function(x){return x.json()}).then(function(b){acc=acc.concat(b);return b.length<P?acc:lanjut(acc,o+P)})}
+   return lanjut(a,P);
+  })})
+}
 var PF=SB_URL+"/functions/v1/tabung-push";
 function pf(b){return fetch(PF,{method:"POST",headers:{"Content-Type":"application/json",apikey:SB_KEY},body:JSON.stringify(b)}).then(function(r){return r.json()})}
 function b64u(t){var p="=".repeat((4-t.length%4)%4),r=atob((t+p).replace(/-/g,"+").replace(/_/g,"/")),o=new Uint8Array(r.length);for(var i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o}
@@ -1167,10 +1223,11 @@ pushAuto();
 $("nrows").addEventListener("input",function(e){var t=e.target,v=t.value,u=v.toUpperCase();if(v!==u){var a=t.selectionStart,b=t.selectionEnd;t.value=u;try{t.setSelectionRange(a,b)}catch(x){}}});
 var T0=Date.now();
 function doneLoad(){var l=$("ld");if(!l||l.className==="off")return;setTimeout(function(){l.className="off";setTimeout(function(){if(l.parentNode)l.parentNode.removeChild(l)},500)},Math.max(0,600-(Date.now()-T0)))}
-function load(){return readAll().then(function(v){items=fromDb(v);render();show("warn","")}).catch(function(e){err(e)}).then(doneLoad)}
-function enqueue(fn){busy++;Q=Q.then(fn).then(function(){show("warn","")},function(e){err(e);return load()}).then(function(){busy--});return Q}
+var lastRaw="",tLoad=0;
+function load(force){return readAll().then(function(v){tLoad=Date.now();var s=JSON.stringify(v);if(force||s!==lastRaw){lastRaw=s;items=fromDb(v);try{localStorage.setItem("tabung_cache",s)}catch(e){}render()}show("warn","")}).catch(function(e){err(e)}).then(doneLoad)}
+function enqueue(fn){busy++;Q=Q.then(fn).then(function(){show("warn","")},function(e){err(e);return load(true)}).then(function(){busy--});return Q}
 function save(x){return enqueue(function(){return upsert([x])})}
-function addRows(xs){var ok=false;return enqueue(function(){return upsert(xs).then(function(){ok=true})}).then(function(){return ok})}
+function addRows(xs,imp){var ok=false;window.__saveErr="";return enqueue(function(){var p=Promise.resolve();for(var i=0;i<xs.length;i+=400)(function(c){p=p.then(function(){return upsert(c,imp)})})(xs.slice(i,i+400));return p.then(function(){ok=true},function(e){window.__saveErr=(e&&e.message)||String(e);throw e})}).then(function(){return ok})}
 function barisHtml(){return '<div class="row nr" style="margin-bottom:8px"><input class="nn" placeholder="No. tabung (wajib)" autocomplete="off"><input class="nb" placeholder="No. barcode (opsional)" autocomplete="off"></div>'}
 function resetBaris(n){$("nrows").innerHTML=new Array((n||3)+1).join(barisHtml())}
 function kosongTambah(){resetBaris(1);$("sup").value="";$("tgl").value="";$("sj").value=""}
@@ -1206,6 +1263,337 @@ $("tambah").onclick=function(){
 };
 $("q").oninput=function(){render()};$("cari").onclick=function(){render()};
 $("q").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();this.blur();render()}};
+
+/* ===== Import Excel (.xlsx / .csv, tanpa library) ===== */
+var CRCT=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(b){var c=0xFFFFFFFF;for(var i=0;i<b.length;i++)c=CRCT[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function zipStore(files){
+ var enc=new TextEncoder(),parts=[],cd=[],off=0;
+ function u16(v){return [v&255,(v>>>8)&255]}
+ function u32(v){return [v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255]}
+ files.forEach(function(f){
+  var nm=enc.encode(f.name),d=enc.encode(f.data),c=crc32(d);
+  var lh=[].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(c),u32(d.length),u32(d.length),u16(nm.length),u16(0));
+  parts.push(new Uint8Array(lh),nm,d);
+  cd.push({nm:nm,c:c,len:d.length,off:off});
+  off+=lh.length+nm.length+d.length;
+ });
+ var cs=off,cdLen=0;
+ cd.forEach(function(e){
+  var h=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(e.c),u32(e.len),u32(e.len),u16(e.nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(e.off));
+  parts.push(new Uint8Array(h),e.nm);cdLen+=h.length+e.nm.length;
+ });
+ parts.push(new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(cd.length),u16(cd.length),u32(cdLen),u32(cs),u16(0))));
+ return new Blob(parts,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+function xe(v){return String(v==null?"":v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function kol(i){var r="";i++;while(i>0){var m=(i-1)%26;r=String.fromCharCode(65+m)+r;i=Math.floor((i-1)/26)}return r}
+function sheetXml(head,rows){
+ var w=head.map(function(h,i){var m=h.length;rows.forEach(function(r){var t=String(r[i]==null?"":r[i]);if(t.length>m)m=t.length});return Math.min(40,Math.max(10,m+2))});
+ var x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>'+w.map(function(v,i){return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+v+'" customWidth="1"/>'}).join("")+'</cols><sheetData>';
+ function row(r,n,st){return '<row r="'+n+'">'+r.map(function(v,i){
+  var ref=kol(i)+n;
+  if(typeof v==="number")return '<c r="'+ref+'"'+(st?' s="1"':'')+'><v>'+v+'</v></c>';
+  if(v===""||v==null)return '<c r="'+ref+'"'+(st?' s="1"':'')+'/>';
+  return '<c r="'+ref+'" t="inlineStr"'+(st?' s="1"':'')+'><is><t xml:space="preserve">'+xe(v)+'</t></is></c>'}).join("")+'</row>'}
+ x+=row(head,1,true)+rows.map(function(r,i){return row(r,i+2,false)}).join("");
+ return x+'</sheetData><autoFilter ref="A1:'+kol(head.length-1)+(rows.length+1)+'"/></worksheet>';
+}
+function buatXlsx(sheets){
+ var ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map(function(_,i){return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'}).join("")+'</Types>';
+ var rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+ var wb='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+sheets.map(function(sh,i){return '<sheet name="'+xe(sh.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'}).join("")+'</sheets></workbook>';
+ var wbr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map(function(_,i){return '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>'}).join("")+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>';
+ var st='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF2563EB"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+ var files=[{name:"[Content_Types].xml",data:ct},{name:"_rels/.rels",data:rels},{name:"xl/workbook.xml",data:wb},{name:"xl/_rels/workbook.xml.rels",data:wbr},{name:"xl/styles.xml",data:st}];
+ sheets.forEach(function(sh,i){files.push({name:"xl/worksheets/sheet"+(i+1)+".xml",data:sheetXml(sh.head,sh.rows)})});
+ return zipStore(files);
+}
+
+function unduh(blob,nama){var a=document.createElement("a"),u=URL.createObjectURL(blob);a.href=u;a.download=nama;document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u)},1500)}
+function inflate(bytes){return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer().then(function(b){return new Uint8Array(b)})}
+function bacaZip(buf){
+ var u=new Uint8Array(buf),dv=new DataView(buf),dec=new TextDecoder(),e=-1;
+ for(var i=u.length-22;i>=Math.max(0,u.length-70000);i--){if(dv.getUint32(i,true)===0x06054b50){e=i;break}}
+ if(e<0)throw new Error("Bukan file xlsx yang valid.");
+ var n=dv.getUint16(e+10,true),p=dv.getUint32(e+16,true),ent={};
+ for(var k=0;k<n;k++){
+  var m=dv.getUint16(p+10,true),cs=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true);
+  var nm=dec.decode(u.subarray(p+46,p+46+nl));ent[nm]={m:m,cs:cs,lo:lo};p+=46+nl+xl+cl;
+ }
+ return {get:function(nm){var f=ent[nm];if(!f)return Promise.resolve(null);
+  var ls=f.lo+30+dv.getUint16(f.lo+26,true)+dv.getUint16(f.lo+28,true),d=u.subarray(ls,ls+f.cs);
+  if(f.m===0)return Promise.resolve(dec.decode(d));
+  if(f.m===8){if(typeof DecompressionStream==="undefined")return Promise.reject(new Error("Browser ini belum mendukung baca xlsx. Simpan file sebagai CSV lalu import lagi."));return inflate(d).then(function(r){return dec.decode(r)})}
+  return Promise.reject(new Error("Format kompresi xlsx tidak didukung."))},names:Object.keys(ent)};
+}
+function xmlDoc(t){return new DOMParser().parseFromString(t,"application/xml")}
+function kolIdx(ref){var m=ref.match(/^[A-Z]+/)[0],r=0;for(var i=0;i<m.length;i++)r=r*26+m.charCodeAt(i)-64;return r-1}
+function parseSheet(t,ss){
+ var rows=[];
+ Array.prototype.forEach.call(xmlDoc(t).getElementsByTagName("row"),function(r){
+  var a=[];Array.prototype.forEach.call(r.getElementsByTagName("c"),function(c){
+   var ref=c.getAttribute("r"),ty=c.getAttribute("t"),v=c.getElementsByTagName("v")[0],val="";
+   if(ty==="inlineStr")val=Array.prototype.map.call(c.getElementsByTagName("t"),function(x){return x.textContent}).join("");
+   else if(v){val=v.textContent;if(ty==="s")val=ss[+val]||"";else if(!ty||ty==="n"){if(/e/i.test(val)&&isFinite(val))val=Number(val).toFixed(0)}}
+   a[ref?kolIdx(ref):a.length]=String(val).trim()});
+  for(var i=0;i<a.length;i++)if(a[i]==null)a[i]="";rows.push(a)});
+ return rows;
+}
+function bacaXlsx(buf,saring){
+ var z=bacaZip(buf),ss=[],daftar=[];
+ return z.get("xl/sharedStrings.xml").then(function(t){
+  if(t)Array.prototype.forEach.call(xmlDoc(t).getElementsByTagName("si"),function(si){ss.push(Array.prototype.map.call(si.getElementsByTagName("t"),function(x){return x.textContent}).join(""))});
+  return z.get("xl/workbook.xml")
+ }).then(function(wb){
+  if(!wb)return null;
+  var shs=Array.prototype.map.call(xmlDoc(wb).getElementsByTagName("sheet"),function(sh){return {name:sh.getAttribute("name")||"",rid:sh.getAttribute("r:id")||sh.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id")}});
+  return z.get("xl/_rels/workbook.xml.rels").then(function(r){
+   var mp={};if(r)Array.prototype.forEach.call(xmlDoc(r).getElementsByTagName("Relationship"),function(e){var t=e.getAttribute("Target");mp[e.getAttribute("Id")]=t.charAt(0)==="/"?t.slice(1):"xl/"+t});
+   shs.forEach(function(sh){if(mp[sh.rid])daftar.push({name:sh.name,path:mp[sh.rid]})})})
+ }).then(function(){
+  var pilih=saring?daftar.filter(function(d){return saring(d.name)}):[];
+  if(!pilih.length)pilih=[daftar[0]||{name:"",path:"xl/worksheets/sheet1.xml"}];
+  var out=[],p=Promise.resolve();
+  pilih.forEach(function(d){p=p.then(function(){return z.get(d.path)}).then(function(t){if(!t)throw new Error("Sheet "+(d.name||"pertama")+" tidak ditemukan.");out.push({name:d.name,rows:parseSheet(t,ss)})})});
+  return p.then(function(){return out})
+ });
+}
+function bacaCsv(t){
+ t=t.replace(/^\uFEFF/,"");var dl=(t.split("\n")[0].match(/;/g)||[]).length>(t.split("\n")[0].match(/,/g)||[]).length?";":",";
+ var rows=[],r=[],f="",q=false;
+ for(var i=0;i<t.length;i++){var c=t[i];
+  if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+  else if(c==='"')q=true;
+  else if(c===dl){r.push(f.trim());f=""}
+  else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n")i++;r.push(f.trim());rows.push(r);r=[];f=""}
+  else f+=c}
+ if(f!==""||r.length){r.push(f.trim());rows.push(r)}
+ return rows;
+}
+function tglParse(v){
+ v=String(v||"").trim();if(!v)return "";
+ if(/^\d{4,6}(\.\d+)?$/.test(v)){var n=+v;if(n>20000&&n<80000){var d=new Date(Date.UTC(1899,11,30)+Math.floor(n)*864e5);return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0")}return ""}
+ var m=v.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return ok3(+m[1],+m[2],+m[3]);
+ m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);if(m)return ok3(+m[3]<100?2000+ +m[3]:+m[3],+m[2],+m[1]);
+ m=v.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+ if(m){var ms=["jan","feb","mar","apr","mei","jun","jul","agu","sep","okt","nov","des"],en={may:"mei",aug:"agu",oct:"okt",dec:"des"},w=m[2].slice(0,3).toLowerCase();w=en[w]||w;var mi=ms.indexOf(w);if(mi>=0)return ok3(+m[3],mi+1,+m[1])}
+ return "";
+}
+function ok3(y,m,d){if(m<1||m>12||d<1||d>31)return "";var t=new Date(y,m-1,d);if(t.getMonth()!==m-1)return "";return iso(t)}
+function petaKolom(h){
+ var r={};h.forEach(function(x,i){var k=String(x||"").toLowerCase().replace(/[^a-z0-9]/g,"");if(!k)return;
+  var f=k.indexOf("barcode")>=0?"b":k.indexOf("batas")>=0?"batas":(k.indexOf("diterima")>=0||k.indexOf("terima")>=0||k.indexOf("tanggal")>=0||k.indexOf("tgl")>=0)?"tgl":(k.indexOf("sj")>=0||k.indexOf("suratjalan")>=0)?"sj":k.indexOf("supplier")>=0?"sup":(k.indexOf("tabung")>=0||k==="nomor"||k==="no")?"n":"";
+  if(f&&r[f]==null)r[f]=i});
+ return r;
+}
+function labelNorm(v){return String(v||"").toUpperCase().replace(/\s+/g," ").trim()}
+function petaForm(row){
+ var L=row.map(labelNorm),iSJ=L.indexOf("NO SJ"),iIPB=L.indexOf("NO IPB"),iSTT=L.indexOf("NO STT"),iSS=L.indexOf("NO STT SUP");
+ if(iSJ<1||iIPB<2||iSTT<2||iSS<1)return null;
+ return {tg:iSJ-1,sj:iSJ,pg:iSJ+1,nt:iSJ+2,tk:iIPB-2,spk:iIPB-1,ipb:iIPB,pm:iIPB+1,tkos:iSTT-2,stt:iSTT,pt:iSTT+1,tkem:iSS-1,sts:iSS,pn:iSS+1,bc:L.indexOf("NO BARCODE")};
+}
+function prosesForm(sheets){
+ var ok=[],dup=[],bad=[],ada={},aktifBaru={},nBlok=0;
+ items.forEach(function(x){ada[ef(x).n.toLowerCase()+"|"+x.diterima+"|"+(x.no_sj||"").toLowerCase()]=1});
+ sheets.forEach(function(sh){
+  var pk=null,cr={tg:"",sj:"",pg:""};
+  sh.rows.forEach(function(r,ri){
+   var m=petaForm(r);if(m){pk=m;cr={tg:"",sj:"",pg:""};nBlok++;return}
+   if(!pk)return;
+   var c=function(i){return i>=0&&r[i]!=null?String(r[i]).trim():""};
+   var n=c(pk.nt);if(!n)return;
+   ["tg","sj","pg"].forEach(function(k){var v=c(pk[k]);if(v!=="")cr[k]=v});
+   var baris=sh.name+" baris "+(ri+1)+" ("+n+")";
+   var tg=tglParse(cr.tg);if(!tg){bad.push(baris+": tanggal diterima tidak terbaca");return}
+   var tk=tglParse(c(pk.tk)),tkos=tglParse(c(pk.tkos)),tkem=tglParse(c(pk.tkem));
+   var spk=c(pk.spk),ipb=c(pk.ipb),pm=c(pk.pm);
+   var st=tkem?"kembali":tkos?"kosong":(tk||spk||ipb||pm)?"mandor":"gudang";
+   var kn=n.toLowerCase(),sj=cr.sj,key=kn+"|"+tg+"|"+sj.toLowerCase();
+   if(ada[key]){dup.push(n);return}
+   if(st!=="kembali"&&(kodeAktif(n)||aktifBaru[kn])){dup.push(n);return}
+   ada[key]=1;if(st!=="kembali")aktifBaru[kn]=1;
+   ok.push({id:uid(),nomor:U(n),barcode:pk.bc>=0?U(c(pk.bc)):"",diterima:tg,batas:plus1m(tg),supplier:U(cr.pg),status:st,mandor:U(pm),spk:U(spk),lokasi:"",kembali:tkem||"",no_sj:U(sj),tgl_keluar:tk||"",no_ipb:U(ipb),pengambil:U(pm),tgl_kosong:tkos||"",no_stt:U(c(pk.stt)),pengantar:U(c(pk.pt)),no_stt_sup:U(c(pk.sts)),penerima:U(c(pk.pn))});
+  });
+ });
+ return {ok:ok,dup:dup,bad:bad,form:true,blok:nBlok};
+}
+function prosesImport(rows){
+ var hi=-1,pk;for(var i=0;i<Math.min(rows.length,15);i++){var m=petaKolom(rows[i]);if(m.n!=null){hi=i;pk=m;break}}
+ if(hi<0)return {err:'Kolom "No. Tabung" tidak ditemukan. Unduh template untuk melihat format yang benar.'};
+ var ok=[],dup=[],bad=[],seen={};
+ for(var j=hi+1;j<rows.length;j++){
+  var r=rows[j],c=function(k){return pk[k]!=null?String(r[pk[k]]||"").trim():""};
+  var n=c("n"),b=c("b");if(!n&&!b)continue;
+  var pp=pisah(n);if(pp&&!b){b=pp.b;n=pp.n}
+  var baris="baris "+(j+1);
+  if(!n){bad.push(baris+": nomor tabung kosong");continue}
+  var sp=c("sup");if(!sp){bad.push(baris+" ("+n+"): supplier kosong");continue}
+  var tg=tglParse(c("tgl"));if(!tg){bad.push(baris+" ("+n+"): tanggal diterima kosong/tidak terbaca");continue}
+  var bt=pk.batas!=null?tglParse(c("batas")):"";if(!bt)bt=plus1m(tg);
+  var kn=n.toLowerCase(),kb=b.toLowerCase();
+  if(seen[kn]||(kb&&seen[kb])||kodeAktif(n)||(b&&kodeAktif(b))){dup.push(n);continue}
+  seen[kn]=1;if(kb)seen[kb]=1;
+  ok.push({id:uid(),nomor:U(n),barcode:U(b),diterima:tg,batas:bt,supplier:U(sp),status:"gudang",mandor:"",spk:"",lokasi:"",kembali:"",no_sj:U(c("sj"))});
+ }
+ return {ok:ok,dup:dup,bad:bad};
+}
+$("imp").onclick=function(){$("impf").value="";$("impf").click()};
+$("impf").onchange=function(){
+ var f=this.files[0];if(!f)return;show("imsg","Membaca "+f.name+"...");
+ var csv=/\.csv$/i.test(f.name);
+ var baca=csv?f.text().then(function(t){return [{name:"",rows:bacaCsv(t)}]}):f.arrayBuffer().then(function(b){return bacaXlsx(b,function(n){return /^FORM TAB OKSI/i.test(n)})});
+ baca.then(function(sh){
+  var form=sh.some(function(x){return x.rows.some(function(r){return petaForm(r)})});
+  var h=form?prosesForm(sh):prosesImport(sh[0].rows);if(h.err)return show("imsg",h.err);
+  var ket=[];if(h.dup.length)ket.push(h.dup.length+" dilewati karena sudah ada/ganda ("+h.dup.slice(0,5).join(", ")+(h.dup.length>5?", ...":"")+")");
+  if(h.bad.length)ket.push(h.bad.length+" baris tidak lengkap: "+h.bad.slice(0,3).join("; ")+(h.bad.length>3?"; ...":""));
+  if(!h.ok.length)return show("imsg","Tidak ada tabung baru yang bisa diimport."+(ket.length?" "+ket.join(". ")+".":""));
+  var nk=h.ok.filter(function(x){return x.status==="kembali"}).length,rinci=form?" ("+(h.ok.length-nk)+" aktif, "+nk+" sudah kembali, dari "+sh.length+" sheet)":"";
+  if(!confirm("Import "+h.ok.length+" tabung baru dari "+f.name+"?"+rinci+(ket.length?"\n\n"+ket.join("\n"):"")))return show("imsg","");
+  show("imsg","Menyimpan "+h.ok.length+" tabung...");
+  h.ok.forEach(function(x){items.push(x)});konfirmasi(h.ok,addRows(h.ok,true));render();
+  show("imsg","Berhasil import "+h.ok.length+" tabung"+rinci+"."+(ket.length?" "+ket.join(". ")+".":""));
+ }).catch(function(e){show("imsg","Gagal membaca file: "+(e&&e.message||e))});
+};
+
+$("hps").onclick=function(){
+ if(!items.length)return show("imsg","Database sudah kosong.");
+ $("hpsmsg").textContent="Semua "+items.length+" tabung (aktif dan riwayat kembali) akan dihapus dari database. Tindakan ini tidak bisa dibatalkan.";
+ $("dlg8").showModal();
+};
+$("hpsbatal").onclick=function(){$("dlg8").close()};
+$("hpsya").onclick=function(){$("dlg8").close();hapusSemua()};
+function hapusSemua(){
+ show("imsg","Menghapus data...");
+ sb("tabung?id=not.is.null",{method:"DELETE",prefer:"return=representation"}).then(function(del){
+  var n=Array.isArray(del)?del.length:0;
+  return readAll().then(function(rows){
+   try{localStorage.removeItem("tabung_cache")}catch(e){}
+   lastRaw="";items=fromDb(rows);render();
+   show("imsg",items.length?"Database menolak penghapusan ("+items.length+" data masih ada). Pastikan policy DELETE untuk role anon sudah dibuat di Supabase (create policy \"anon delete\" on public.tabung for delete to anon using (true);).":"Selesai. "+n+" data tabung sudah dihapus dari database.");
+  });
+ }).catch(function(e){show("imsg","Gagal menghapus: "+(e&&e.message||e)+". Pastikan policy DELETE untuk role anon ada di Supabase.")});
+};
+
+/* ===== Export Excel: format FORM TAB OKSI ===== */
+function StyleReg(){
+ var fonts=['<font><sz val="11"/><name val="Calibri"/></font>'],fills=['<fill><patternFill patternType="none"/></fill>','<fill><patternFill patternType="gray125"/></fill>'],
+ borders=['<border><left/><right/><top/><bottom/><diagonal/></border>','<border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border>'],
+ nfs=[],xfs=['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'],cache={};
+ function ix(a,x){var i=a.indexOf(x);if(i<0){a.push(x);i=a.length-1}return i}
+ this.get=function(sp){
+  var k=JSON.stringify(sp);if(cache[k]!=null)return cache[k];
+  var fo='<font>'+(sp.b?'<b/>':'')+'<sz val="'+(sp.sz||11)+'"/>'+(sp.col?'<color rgb="'+sp.col+'"/>':'')+'<name val="Calibri"/></font>';
+  var fi=sp.fill?'<fill><patternFill patternType="solid"><fgColor rgb="'+sp.fill+'"/><bgColor indexed="64"/></patternFill></fill>':null;
+  var fid=ix(fonts,fo),fl=fi?ix(fills,fi):0,bd=sp.bd?1:0,nid=0;
+  if(sp.nf){var j=nfs.indexOf(sp.nf);if(j<0){nfs.push(sp.nf);j=nfs.length-1}nid=164+j}
+  var al=(sp.h||sp.v)?'<alignment'+(sp.h?' horizontal="'+sp.h+'"':'')+(sp.v?' vertical="'+sp.v+'"':'')+'/>':'';
+  xfs.push('<xf numFmtId="'+nid+'" fontId="'+fid+'" fillId="'+fl+'" borderId="'+bd+'" xfId="0" applyFont="1"'+(fl?' applyFill="1"':'')+(bd?' applyBorder="1"':'')+(nid?' applyNumberFormat="1"':'')+(al?' applyAlignment="1">'+al+'</xf>':'/>'));
+  cache[k]=xfs.length-1;return cache[k];
+ };
+ this.xml=function(){
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+   (nfs.length?'<numFmts count="'+nfs.length+'">'+nfs.map(function(f,i){return '<numFmt numFmtId="'+(164+i)+'" formatCode="'+xe(f)+'"/>'}).join("")+'</numFmts>':'')+
+   '<fonts count="'+fonts.length+'">'+fonts.join("")+'</fonts><fills count="'+fills.length+'">'+fills.join("")+'</fills><borders count="'+borders.length+'">'+borders.join("")+'</borders>'+
+   '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="'+xfs.length+'">'+xfs.join("")+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+ };
+}
+function serTgl(iso){var m=String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?Math.round((Date.UTC(+m[1],+m[2]-1,+m[3])-Date.UTC(1899,11,30))/864e5):null}
+function nn(v,m){v=String(v==null?"":v).trim();return /^[1-9]\d*$/.test(v)&&v.length<=(m||12)?Number(v):null}
+function angka(v,maks){v=String(v==null?"":v).trim();return /^\d+$/.test(v)&&v.length<=(maks||12)?Number(v):null}
+function sheetForm(tahun,items,R){
+ var rows={},hts={},merges=[];
+ function put(r,c,v,sp){(rows[r]||(rows[r]={}))[c]={v:v,s:R.get(sp||{})}}
+ function merge(r1,c1,r2,c2,sp){for(var r=r1;r<=r2;r++)for(var c=c1;c<=c2;c++)if(!(r===r1&&c===c1))put(r,c,null,sp);merges.push(kol(c1)+r1+":"+kol(c2)+r2)}
+ var DATE="[$-409]d\\-mmm\\-yy;@",RED="FFFF0000",
+ H1={sz:14,b:1,bd:1,h:"center",v:"bottom"},H1s={sz:10,b:1,bd:1,h:"center",v:"bottom"},H2={sz:12,b:1,bd:1,h:"center",v:"bottom"},
+ D={sz:14,bd:1,h:"center",v:"center"},DR={sz:14,b:1,col:RED,bd:1,h:"center",v:"center"};
+ function sp(base,nf){var o={};for(var k in base)o[k]=base[k];if(nf)o.nf=nf;return o}
+ var C={B:1,C:2,D:3,E:4,F:5,G:6,I:8,J:9,K:10,L:11,M:12,N:13,P:15,Q:16,R:17,S:18,T:19,V:21,W:22,X:23,Y:24,Z:25,AB:27};
+ put(2,1,"TAHUN "+tahun,{sz:48,b:1,col:"FF000000",fill:"FF00CCFF",bd:1,h:"center",v:"center"});
+ merge(2,1,2,25,{sz:48,b:1,col:"FF000000",fill:"FF00CCFF",bd:1,h:"center",v:"center"});hts[2]=61.5;hts[3]=15;
+ // kelompokkan per pengiriman (tanggal diterima + supplier + no SJ)
+ var g={},ord=[];
+ items.forEach(function(x){var k=(x.diterima||"")+"|"+U(x.supplier)+"|"+U(x.no_sj);if(!g[k]){g[k]=[];ord.push(k)}g[k].push(x)});
+ var cmp=new Intl.Collator("id",{numeric:true});
+ ord.sort(function(a,b){var A=g[a][0],B=g[b][0];return (A.diterima||"")<(B.diterima||"")?-1:(A.diterima||"")>(B.diterima||"")?1:cmp.compare(A.no_sj||"",B.no_sj||"")});
+ var r=4,awal=6,akhir=5;
+ ord.forEach(function(k){
+  var ts=g[k].slice().sort(function(a,b){return cmp.compare(ef(a).n,ef(b).n)}),n=ts.length;
+  put(r,C.B,"NO",H1);put(r+1,C.B,null,H1);
+  put(r,C.C,"MASUK DARI SUPLIER  ( TABUNG ISI )",H1);merge(r,C.C,r,C.G,H1);
+  put(r,C.I,"KELUAR UNTUK PROYEK ( TABUNG ISI )",H1);merge(r,C.I,r,C.M,H1);
+  put(r,C.N,"SISA STOK",H1s);
+  put(r,C.P,"MASUK DARI PROYEK  ( TABUNG KOSONG )",H1);merge(r,C.P,r,C.T,H1);
+  put(r,C.V,"PENGEMBALIAN TABUNG KOSONG KE SUPLIER",H1);merge(r,C.V,r,C.Z,H1);
+  put(r,C.AB,null,H2);put(r+1,C.AB,"NO BARCODE",H2);
+  [["C","TANGGAL"],["D","NO SJ"],["E","NAMA PENGIRIM"],["F","NO TABUNG"],["G","JUM"],["I","TANGGAL"],["J","NO SPK"],["K","NO IPB"],["L","PENGAMBIL"],["M","JUM"],["N","TAB ISI"],["P","TANGGAL"],["Q","NO SPK"],["R","NO STT"],["S","PENGANTAR"],["T","JUM"],["V","TANGGAL"],["W","NO STT SUP"],["X","PENERIMA"],["Y","NO TABUNG"],["Z","JUM"]].forEach(function(h){put(r+1,C[h[0]],h[1],H2)});
+  hts[r]=18.75;hts[r+1]=18.75;
+  var r1=r+2,f=ts[0];
+  ts.forEach(function(x,i){
+   var q=r1+i,e=ef(x),keluar=x.status==="mandor"||x.status==="kosong"||x.status==="kembali",masuk=x.status==="kosong"||x.status==="kembali";
+   hts[q]=18.75;
+   put(q,C.B,i===0?1:{f:"B"+(q-1)+"+1"},D);
+   if(i===0){var sj=nn(x.no_sj,9);
+    put(q,C.C,serTgl(x.diterima),sp(D,DATE));put(q,C.D,x.no_sj?(sj!=null?sj:x.no_sj):null,D);put(q,C.E,x.supplier||null,D)}
+   else{put(q,C.C,null,D);put(q,C.D,null,D);put(q,C.E,null,D)}
+   var nt=nn(e.n,12);put(q,C.F,nt!=null?nt:e.n,sp(DR,nt!=null?"00000":null));put(q,C.G,1,D);
+   put(q,C.I,serTgl(x.tgl_keluar),sp(DR,DATE));
+   var spk=nn(x.spk,9);put(q,C.J,x.spk?(spk!=null?spk:x.spk):null,DR);
+   var ip=nn(x.no_ipb,9);put(q,C.K,x.no_ipb?(ip!=null?ip:x.no_ipb):null,sp(DR,ip!=null?"000":null));
+   put(q,C.L,x.pengambil||null,DR);put(q,C.M,keluar?1:null,sp(DR,"0"));
+   put(q,C.N,{f:"1-M"+q},sp({sz:14,b:1,bd:1,h:"center",v:"center"},"0"));
+   put(q,C.P,serTgl(x.tgl_kosong),sp(DR,DATE));
+   put(q,C.Q,{f:'IF(AND(T'+q+'=1,J'+q+'<>""),J'+q+',"")'},DR);
+   var st=nn(x.no_stt,9);put(q,C.R,x.no_stt?(st!=null?st:x.no_stt):null,DR);
+   put(q,C.S,x.pengantar||null,DR);put(q,C.T,masuk?1:null,DR);
+   put(q,C.V,serTgl(x.kembali),sp(DR,DATE));
+   var sts=nn(x.no_stt_sup,9);put(q,C.W,x.no_stt_sup?(sts!=null?sts:x.no_stt_sup):null,sp(DR,sts!=null?"000000":null));
+   put(q,C.X,x.penerima||null,DR);
+   put(q,C.Y,{f:'IF(V'+q+'<>"",F'+q+',"")'},sp(D,nt!=null?"00000":null));
+   put(q,C.Z,{f:"IF(V"+q+",1,0)"},D);
+   put(q,C.AB,e.b||null,D);
+  });
+  var r2=r1+n-1;
+  if(n>1){merge(r1,C.C,r2,C.C,sp(D,DATE));merge(r1,C.D,r2,C.D,D);merge(r1,C.E,r2,C.E,D)}
+  akhir=r2;r=r2+2;hts[r2+1]=15;
+ });
+ // baris total
+ var t=akhir+1,TS={sz:14,b:1,bd:1,h:"center",v:"center"};
+ put(t,C.I,"TOTAL TABUNG ISI",TS);merge(t,C.I,t,C.M,TS);put(t,C.N,{f:"SUM(N"+awal+":N"+akhir+")"},TS);
+ put(t,C.P,"TOTAL TABUNG KOSONG KEMBALI",TS);merge(t,C.P,t,C.S,TS);put(t,C.T,{f:"SUM(T"+awal+":T"+akhir+")"},TS);
+ put(t,C.V,"TOTAL TABUNG KOSONG KEMBALI KE SUPPLIER",TS);merge(t,C.V,t,C.Y,TS);put(t,C.Z,{f:"SUM(Z"+awal+":Z"+akhir+")"},TS);hts[t]=18.75;
+ var W=[[1,6],[2,13.7],[3,15.7],[4,18.1],[5,18],[6,7],[7,2.7],[8,13.8],[9,11],[10,9],[11,14],[12,7],[13,9],[14,2.8],[15,13.8],[16,11],[17,9],[18,14],[19,7],[20,3.1],[21,13.8],[22,12.6],[23,11.4],[24,18],[25,8],[26,2.7],[27,16]];
+ var x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>'+W.map(function(w){return '<col min="'+(w[0]+1)+'" max="'+(w[0]+1)+'" width="'+w[1]+'" customWidth="1"/>'}).join("")+'</cols><sheetData>';
+ Object.keys(rows).map(Number).sort(function(a,b){return a-b}).forEach(function(rr){
+  var cs=rows[rr];x+='<row r="'+rr+'"'+(hts[rr]?' ht="'+hts[rr]+'" customHeight="1"':'')+'>';
+  Object.keys(cs).map(Number).sort(function(a,b){return a-b}).forEach(function(cc){
+   var c=cs[cc],ref=kol(cc)+rr,v=c.v;
+   if(v==null)x+='<c r="'+ref+'" s="'+c.s+'"/>';
+   else if(typeof v==="number")x+='<c r="'+ref+'" s="'+c.s+'"><v>'+v+'</v></c>';
+   else if(typeof v==="object")x+='<c r="'+ref+'" s="'+c.s+'"><f>'+xe(v.f)+'</f></c>';
+   else x+='<c r="'+ref+'" s="'+c.s+'" t="inlineStr"><is><t xml:space="preserve">'+xe(v)+'</t></is></c>'});
+  x+='</row>'});
+ x+='</sheetData><mergeCells count="'+merges.length+'">'+merges.map(function(m){return '<mergeCell ref="'+m+'"/>'}).join("")+'</mergeCells><pageMargins left="0.32" right="0.32" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="5" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>';
+ return x;
+}
+function rakitXlsx(names,sheets,styles){
+ var ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map(function(_,i){return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'}).join("")+'</Types>';
+ var rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+ var wb='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+names.map(function(n,i){return '<sheet name="'+xe(n)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'}).join("")+'</sheets><calcPr fullCalcOnLoad="1"/></workbook>';
+ var wbr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map(function(_,i){return '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>'}).join("")+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>';
+ var files=[{name:"[Content_Types].xml",data:ct},{name:"_rels/.rels",data:rels},{name:"xl/workbook.xml",data:wb},{name:"xl/_rels/workbook.xml.rels",data:wbr},{name:"xl/styles.xml",data:styles}];
+ sheets.forEach(function(x,i){files.push({name:"xl/worksheets/sheet"+(i+1)+".xml",data:x})});
+ return zipStore(files);
+}
+function exportForm(){
+ if(!items.length)return show("imsg","Belum ada data untuk diexport.");
+ var th={};items.forEach(function(x){var y=x.diterima?x.diterima.slice(0,4):"TANPA TANGGAL";(th[y]=th[y]||[]).push(x)});
+ var R=new StyleReg(),ys=Object.keys(th).sort(),sh=ys.map(function(y){return sheetForm(y,th[y],R)});
+ unduh(rakitXlsx(ys.map(function(y){return "FORM TAB OKSI "+y}),sh,R.xml()),"TABUNG_OKSIGEN_GUDANG_MANIKA.xlsx");
+ show("imsg","Export selesai: "+items.length+" tabung dalam "+ys.length+" sheet (per tahun diterima).");
+}
 $("t1").onclick=function(){tab="aktif";flt="";render()};
 function statTap(f){
  if(f==="kembali"){tab="riwayat";flt=""}
@@ -1365,7 +1753,7 @@ function konfirmasi(xs,p){
  if(!$("dlg7").open)$("dlg7").showModal();
  p.then(function(b){
   if(b){$("okh").innerHTML=IC.ok+"<span>Berhasil</span>";$("okmsg").textContent=n.length===1?"Tabung "+n[0]+" berhasil ditambahkan ke database.":n.length+" tabung berhasil ditambahkan ke database: "+n.slice(0,20).join(", ")+(n.length>20?", ...":"")+"."}
-  else{$("okh").innerHTML=IC.err+"<span>Gagal</span>";$("okmsg").textContent="Tabung gagal disimpan ke database. Periksa koneksi lalu coba lagi."}
+  else{$("okh").innerHTML=IC.err+"<span>Gagal</span>";$("okmsg").textContent="Tabung gagal disimpan ke database"+(window.__saveErr?": "+window.__saveErr:". Periksa koneksi lalu coba lagi.");window.__saveErr=""}
  });
 }
 $("okbtn").onclick=function(){$("dlg7").close()};
@@ -1483,7 +1871,7 @@ document.body.insertAdjacentHTML("beforeend",'<div id="rpt"></div><dialog id="dl
 $("lacak").insertAdjacentHTML("afterend",'<button id="cetak"><span>Cetak laporan</span></button>');
 $("cetak").onclick=function(){var ys={},y=String(new Date().getFullYear());ys[y]=1;items.forEach(function(x){if(x.diterima)ys[x.diterima.slice(0,4)]=1});$("lth").innerHTML=Object.keys(ys).sort().reverse().map(function(v){return '<option>'+v+'</option>'}).join("");$("dlg9").showModal()};
 $("lbat").onclick=function(){$("dlg9").close()};
-$("lcet").onclick=function(){$("rpt").innerHTML=lap($("lth").value);$("dlg9").close();setTimeout(function(){window.print()},150)};
+$("lcet").onclick=function(){var th=$("lth").value,jd=document.title;$("rpt").innerHTML=lap(th);$("dlg9").close();document.title="Laporan Tabung "+th;var pulih=function(){document.title=jd;window.removeEventListener("afterprint",pulih)};window.addEventListener("afterprint",pulih);setTimeout(function(){window.print();setTimeout(function(){if(document.title!==jd&&!window.matchMedia("print").matches)pulih()},1500)},150)};
 $("kbat").onclick=function(){$("dlg8").close()};
 $("ksim").onclick=function(){if(!$("ktgl").value)return show("kerr","Isi tanggal masuk dari proyek.");cur.status="kosong";cur.tgl_kosong=$("ktgl").value;cur.no_stt=$("stt").value.trim();cur.pengantar=$("png").value.trim();save(cur);$("dlg8").close();render()};
 
@@ -1491,11 +1879,13 @@ resetBaris(1);
 render();
 if(SB_URL.indexOf("PASTE_")>=0||SB_KEY.indexOf("PASTE_")>=0){show("warn","SB_URL dan SB_KEY Supabase belum diisi di file index.html.");doneLoad()}
 else{
+ try{var cc=localStorage.getItem("tabung_cache");if(cc){items=fromDb(JSON.parse(cc));lastRaw=cc;render();doneLoad()}}catch(e){}
  load();
- setInterval(function(){if(!busy&&!document.querySelector("dialog[open]"))load()},60000);
- document.addEventListener("visibilitychange",function(){if(!document.hidden&&!busy&&!document.querySelector("dialog[open]"))load()});
+ setInterval(function(){if(!busy&&!document.hidden&&!document.querySelector("dialog[open]"))load()},180000);
+ document.addEventListener("visibilitychange",function(){if(!document.hidden&&!busy&&Date.now()-tLoad>60000&&!document.querySelector("dialog[open]"))load()});
 }
 setTimeout(doneLoad,1500);
+window.__appOk=true;
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
 })();
 </script>
