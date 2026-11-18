@@ -1009,7 +1009,7 @@ setTimeout(function(){
 </div>
 </dialog>
 
-<dialog id="dlg8">
+<dialog id="dlgHapus">
 <h2>
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--er)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
   <span>Hapus semua data?</span>
@@ -1490,10 +1490,10 @@ $("hps").onclick=function(){
  if(!isDewa())return show("imsg","Hanya Dewa yang boleh menghapus data.");
  if(!items.length)return show("imsg","Database sudah kosong.");
  $("hpsmsg").textContent="Semua "+items.length+" tabung (aktif dan riwayat kembali) akan dihapus dari database. Tindakan ini tidak bisa dibatalkan.";
- $("dlg8").showModal();
+ $("dlgHapus").showModal();
 };
-$("hpsbatal").onclick=function(){$("dlg8").close()};
-$("hpsya").onclick=function(){$("dlg8").close();hapusSemua()};
+$("hpsbatal").onclick=function(){$("dlgHapus").close()};
+$("hpsya").onclick=function(){$("dlgHapus").close();hapusSemua()};
 function hapusSemua(){
  show("imsg","Menghapus data...");
  sb("tabung?id=not.is.null",{method:"DELETE",prefer:"return=representation"}).then(function(del){
