@@ -329,6 +329,13 @@ button.s {
   gap: 6px;
 }
 
+#me{padding:5px 12px 5px 5px;border-radius:99px;gap:8px;font-size:13px}
+#me .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--pr);color:#fff;font-weight:800;font-size:13px}
+#me .lo{color:var(--mu);font-weight:600;font-size:12px;padding-left:8px;border-left:1px solid var(--bd)}
+#dlgLogin .pkb{width:100%;justify-content:flex-start;margin:6px 0;padding:10px 14px}
+#dlgLogin .pkav{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800}
+#dlgLogin input{width:100%;margin:6px 0;text-align:center;letter-spacing:4px}
+
 /* Specific Button Colors */
 #buka, #tambah, #stam, #okbtn {
   background: linear-gradient(135deg, #10b981, #059669);
@@ -338,6 +345,26 @@ button.s {
 #lacak, #cari, #lcari {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   border-color: #2563eb;
+  color: #fff;
+}
+#cetak {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-color: #4f46e5;
+  color: #fff;
+}
+#imp {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  border-color: #0891b2;
+  color: #fff;
+}
+#hps {
+  background: var(--erb);
+  border-color: var(--er);
+  color: var(--er);
+}
+#hps:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-color: #dc2626;
   color: #fff;
 }
 #scan {
@@ -826,6 +853,7 @@ setTimeout(function(){
 <div class="top">
   <h1>Pengelolaan Tabung Oksigen</h1>
   <span class="tb">
+    <button id="me" type="button" style="display:none" title="Ganti pengguna / keluar"></button>
     <button id="tema" type="button" aria-label="Ganti mode terang/gelap" title="Ganti mode terang/gelap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
     </button>
@@ -845,8 +873,8 @@ setTimeout(function(){
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/></svg>
       <span>Lacak tabung</span>
     </button>
-    <button type="button" class="s" id="imp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg><span>Import Excel</span></button>
-    <button type="button" class="s" id="hps" style="color:var(--er);border-color:var(--er)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span>Hapus semua</span></button>
+    <button type="button" id="imp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg><span>Import Excel</span></button>
+    <button type="button" id="hps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg><span>Hapus data</span></button>
   </div>
 </div>
 
@@ -1151,8 +1179,9 @@ function render(){
 function norm(v){return v==null?"":String(v).slice(0,10)}
 var SB_URL="https://alnmjxyyfhkytwkwzpon.supabase.co";
 var SB_KEY="sb_publishable_DaL5YRZ7cIVN52tEiz3REw_u2s9Pu2g";
+var tok="",me="";try{tok=localStorage.getItem("sesi2")||""}catch(e){}
 function sb(path,o){
- o=o||{};var h={apikey:SB_KEY,"Content-Type":"application/json"};
+ o=o||{};var h={apikey:SB_KEY,"Content-Type":"application/json"};if(tok)h["x-client-info"]=tok;
  if(SB_KEY.indexOf("eyJ")===0)h.Authorization="Bearer "+SB_KEY;
  if(o.prefer)h.Prefer=o.prefer;
  return fetch(SB_URL+"/rest/v1/"+path,{method:o.method||"GET",headers:h,body:o.body?JSON.stringify(o.body):undefined}).then(function(r){
@@ -1170,7 +1199,7 @@ function err(e){
  if(e instanceof TypeError)m="Tidak bisa terhubung ke internet atau ke Supabase. Periksa koneksi dan SB_URL.";
  show("warn",m);
 }
-function sbHdr(c){var h={apikey:SB_KEY};if(SB_KEY.indexOf("eyJ")===0)h.Authorization="Bearer "+SB_KEY;if(c)h.Prefer="count=exact";return h}
+function sbHdr(c){var h={apikey:SB_KEY};if(tok)h["x-client-info"]=tok;if(SB_KEY.indexOf("eyJ")===0)h.Authorization="Bearer "+SB_KEY;if(c)h.Prefer="count=exact";return h}
 function sbOk(r){if(r.ok)return r;return r.json().catch(function(){return {}}).then(function(j){throw {message:j.message||("HTTP "+r.status)}})}
 function readAll(){
  var P=1000,u=SB_URL+"/rest/v1/tabung?select=*&order=created_at.desc,id.asc&limit="+P+"&offset=";
@@ -1438,7 +1467,7 @@ function prosesImport(rows){
  }
  return {ok:ok,dup:dup,bad:bad};
 }
-$("imp").onclick=function(){$("impf").value="";$("impf").click()};
+$("imp").onclick=function(){if(!isDewa())return show("imsg","Hanya Dewa yang boleh import.");$("impf").value="";$("impf").click()};
 $("impf").onchange=function(){
  var f=this.files[0];if(!f)return;show("imsg","Membaca "+f.name+"...");
  var csv=/\.csv$/i.test(f.name);
@@ -1458,6 +1487,7 @@ $("impf").onchange=function(){
 };
 
 $("hps").onclick=function(){
+ if(!isDewa())return show("imsg","Hanya Dewa yang boleh menghapus data.");
  if(!items.length)return show("imsg","Database sudah kosong.");
  $("hpsmsg").textContent="Semua "+items.length+" tabung (aktif dan riwayat kembali) akan dihapus dari database. Tindakan ini tidak bisa dibatalkan.";
  $("dlg8").showModal();
@@ -1471,9 +1501,9 @@ function hapusSemua(){
   return readAll().then(function(rows){
    try{localStorage.removeItem("tabung_cache")}catch(e){}
    lastRaw="";items=fromDb(rows);render();
-   show("imsg",items.length?"Database menolak penghapusan ("+items.length+" data masih ada). Pastikan policy DELETE untuk role anon sudah dibuat di Supabase (create policy \"anon delete\" on public.tabung for delete to anon using (true);).":"Selesai. "+n+" data tabung sudah dihapus dari database.");
+   show("imsg",items.length?"Database menolak penghapusan ("+items.length+" data masih ada). Hanya pengguna Dewa yang boleh menghapus. Pastikan Anda masih masuk sebagai Dewa (coba Keluar lalu masuk lagi).":"Selesai. "+n+" data tabung sudah dihapus dari database.");
   });
- }).catch(function(e){show("imsg","Gagal menghapus: "+(e&&e.message||e)+". Pastikan policy DELETE untuk role anon ada di Supabase.")});
+ }).catch(function(e){show("imsg","Gagal menghapus: "+(e&&e.message||e)+". Hanya pengguna Dewa yang boleh menghapus.")});
 };
 
 /* ===== Export Excel: format FORM TAB OKSI ===== */
@@ -1868,21 +1898,77 @@ function lap(thn){
  return xs.length?h:h+'<p>Tidak ada data untuk tahun ini.</p>';
 }
 document.body.insertAdjacentHTML("beforeend",'<div id="rpt"></div><dialog id="dlg9"><h2>Cetak laporan</h2><label for="lth">Tahun (menurut tanggal diterima)</label><select id="lth"></select><p class="note">Format sama dengan Excel. Di jendela cetak pilih kertas Legal, lanskap, atau Simpan sebagai PDF.</p><div class="acts" style="margin-top:18px;justify-content:flex-end"><button id="lbat"><span>Batal</span></button><button class="p" id="lcet"><span>Cetak</span></button></div></dialog>');
-$("lacak").insertAdjacentHTML("afterend",'<button id="cetak"><span>Cetak laporan</span></button>');
+$("lacak").insertAdjacentHTML("afterend",'<button id="cetak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span>Cetak laporan</span></button>');
 $("cetak").onclick=function(){var ys={},y=String(new Date().getFullYear());ys[y]=1;items.forEach(function(x){if(x.diterima)ys[x.diterima.slice(0,4)]=1});$("lth").innerHTML=Object.keys(ys).sort().reverse().map(function(v){return '<option>'+v+'</option>'}).join("");$("dlg9").showModal()};
 $("lbat").onclick=function(){$("dlg9").close()};
 $("lcet").onclick=function(){var th=$("lth").value,jd=document.title;$("rpt").innerHTML=lap(th);$("dlg9").close();document.title="Laporan Tabung "+th;var pulih=function(){document.title=jd;window.removeEventListener("afterprint",pulih)};window.addEventListener("afterprint",pulih);setTimeout(function(){window.print();setTimeout(function(){if(document.title!==jd&&!window.matchMedia("print").matches)pulih()},1500)},150)};
 $("kbat").onclick=function(){$("dlg8").close()};
 $("ksim").onclick=function(){if(!$("ktgl").value)return show("kerr","Isi tanggal masuk dari proyek.");cur.status="kosong";cur.tgl_kosong=$("ktgl").value;cur.no_stt=$("stt").value.trim();cur.pengantar=$("png").value.trim();save(cur);$("dlg8").close();render()};
 
+var USERS=["Dewa","Afga","Daryanto","Wartono"],COL=["#dc2626","#2563eb","#d97706","#059669"],pkNama="",pkHas=false,bound=false;
+function isDewa(){return me==="Dewa"}
+function peran(){
+ $("imp").style.display=isDewa()?"":"none";$("hps").style.display=isDewa()?"":"none";
+ var b=$("me");b.style.display=me?"":"none";b.innerHTML=me?'<span class="av">'+esc(me.charAt(0))+'</span><span>'+esc(me)+'</span><span class="lo">Keluar</span>':"";
+}
+document.body.insertAdjacentHTML("beforeend",'<dialog id="dlgLogin"><h2 id="lgT">Siapa yang mengakses?</h2><div id="lgList"></div><div id="lgPin" style="display:none"><input id="lgp1" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="PIN"><input id="lgp2" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="Ulangi PIN"><div class="acts" style="margin-top:12px;justify-content:flex-end"><button type="button" class="s" id="lgBack">Kembali</button><button type="button" class="p" id="lgOk">Masuk</button></div></div><p id="lgMsg" class="note" role="alert"></p></dialog>');
+$("dlgLogin").addEventListener("cancel",function(e){e.preventDefault()});
+$("lgList").innerHTML=USERS.map(function(n,i){return '<button type="button" class="pkb" data-u="'+n+'"><span class="pkav" style="background:'+COL[i]+'">'+n.charAt(0)+'</span><span>'+n+'</span></button>'}).join("");
+function lgDaftar(){pkNama="";$("lgT").textContent="Siapa yang mengakses?";$("lgPin").style.display="none";$("lgList").style.display=""}
+function bukaLogin(msg){lgDaftar();$("lgMsg").textContent=msg||"";if(!$("dlgLogin").open)$("dlgLogin").showModal();doneLoad()}
+$("lgList").onclick=function(e){
+ var b=e.target.closest("button[data-u]");if(!b)return;
+ b.disabled=true;$("lgMsg").textContent="Memuat...";
+ sb("rpc/pin_sudah_ada",{method:"POST",body:{p_nama:b.getAttribute("data-u")}}).then(function(has){
+  $("lgMsg").textContent="";pkNama=b.getAttribute("data-u");pkHas=!!has;
+  $("lgT").textContent=has?"Masukkan PIN, "+pkNama:"Buat PIN untuk "+pkNama;
+  $("lgp1").value="";$("lgp2").value="";$("lgp2").style.display=has?"none":"";
+  $("lgp1").placeholder=has?"PIN":"PIN baru (4-6 angka)";$("lgOk").textContent=has?"Masuk":"Buat PIN";
+  $("lgList").style.display="none";$("lgPin").style.display="";$("lgp1").focus();
+ }).catch(function(x){$("lgMsg").textContent="Tidak bisa terhubung: "+((x&&x.message)||"")}).then(function(){b.disabled=false});
+};
+$("lgBack").onclick=function(){$("lgMsg").textContent="";lgDaftar()};
+function lgGo(){
+ var n=pkNama,p1=$("lgp1").value.trim(),m=$("lgMsg"),btn=$("lgOk");
+ if(!n)return;
+ if(!/^\d{4,6}$/.test(p1)){m.textContent="PIN harus 4 sampai 6 angka.";return}
+ if(!pkHas&&p1!==$("lgp2").value.trim()){m.textContent="Pengulangan PIN tidak sama.";return}
+ btn.disabled=true;m.textContent="";
+ sb("rpc/"+(pkHas?"masuk":"buat_pin"),{method:"POST",body:{p_nama:n,p_pin:p1}}).then(function(r){
+  if(!r||!r.ok){var k=r&&r.kode;m.textContent=k==="PIN_SALAH"?"PIN salah.":k==="TERKUNCI"?"Terlalu banyak salah. Coba lagi 15 menit lagi.":k==="PIN_TIDAK_BISA"?"PIN sudah pernah dibuat. Masukkan PIN.":"PIN harus 4 sampai 6 angka.";return}
+  tok=r.token;try{localStorage.setItem("sesi2",tok)}catch(x){}
+  me=n;$("dlgLogin").close();peran();mulai();
+ }).catch(function(x){m.textContent="Tidak bisa terhubung: "+((x&&x.message)||"")}).then(function(){btn.disabled=false});
+}
+$("lgOk").onclick=lgGo;
+$("lgp1").onkeydown=$("lgp2").onkeydown=function(e){if(e.key==="Enter")lgGo()};
+$("me").onclick=function(){
+ sb("rpc/keluar",{method:"POST",body:{}}).catch(function(){}).then(function(){
+  tok="";me="";items=[];lastRaw="";
+  try{localStorage.removeItem("sesi2");localStorage.removeItem("tabung_cache")}catch(e){}
+  peran();render();bukaLogin();
+ });
+};
+function mulai(){
+ try{var cc=localStorage.getItem("tabung_cache");if(cc){items=fromDb(JSON.parse(cc));lastRaw=cc;render();doneLoad()}}catch(e){}
+ load();
+ if(bound)return;bound=true;
+ setInterval(function(){if(me&&!busy&&!document.hidden&&!document.querySelector("dialog[open]"))load()},180000);
+ document.addEventListener("visibilitychange",function(){if(me&&!document.hidden&&!busy&&Date.now()-tLoad>60000&&!document.querySelector("dialog[open]"))load()});
+}
+function mulaiLogin(){
+ if(!tok){bukaLogin();return}
+ sb("rpc/sesi_nama",{method:"POST",body:{}}).then(function(n){
+  if(n&&USERS.indexOf(n)>=0){me=n;peran();mulai()}
+  else{tok="";try{localStorage.removeItem("sesi2")}catch(e){}bukaLogin()}
+ }).catch(function(e){show("warn","Tidak bisa terhubung ke database: "+((e&&e.message)||e));doneLoad()});
+}
+peran();
 resetBaris(1);
 render();
 if(SB_URL.indexOf("PASTE_")>=0||SB_KEY.indexOf("PASTE_")>=0){show("warn","SB_URL dan SB_KEY Supabase belum diisi di file index.html.");doneLoad()}
 else{
- try{var cc=localStorage.getItem("tabung_cache");if(cc){items=fromDb(JSON.parse(cc));lastRaw=cc;render();doneLoad()}}catch(e){}
- load();
- setInterval(function(){if(!busy&&!document.hidden&&!document.querySelector("dialog[open]"))load()},180000);
- document.addEventListener("visibilitychange",function(){if(!document.hidden&&!busy&&Date.now()-tLoad>60000&&!document.querySelector("dialog[open]"))load()});
+ mulaiLogin();
 }
 setTimeout(doneLoad,1500);
 window.__appOk=true;
