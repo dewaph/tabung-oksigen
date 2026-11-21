@@ -1509,14 +1509,14 @@ function hapusSemua(){
 /* ===== Export Excel: format FORM TAB OKSI ===== */
 function StyleReg(){
  var fonts=['<font><sz val="11"/><name val="Calibri"/></font>'],fills=['<fill><patternFill patternType="none"/></fill>','<fill><patternFill patternType="gray125"/></fill>'],
- borders=['<border><left/><right/><top/><bottom/><diagonal/></border>','<border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border>'],
+ borders=['<border><left/><right/><top/><bottom/><diagonal/></border>','<border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border>','<border><left style="medium"><color auto="1"/></left><right style="medium"><color auto="1"/></right><top style="medium"><color auto="1"/></top><bottom style="medium"><color auto="1"/></bottom><diagonal/></border>'],
  nfs=[],xfs=['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'],cache={};
  function ix(a,x){var i=a.indexOf(x);if(i<0){a.push(x);i=a.length-1}return i}
  this.get=function(sp){
   var k=JSON.stringify(sp);if(cache[k]!=null)return cache[k];
   var fo='<font>'+(sp.b?'<b/>':'')+'<sz val="'+(sp.sz||11)+'"/>'+(sp.col?'<color rgb="'+sp.col+'"/>':'')+'<name val="Calibri"/></font>';
   var fi=sp.fill?'<fill><patternFill patternType="solid"><fgColor rgb="'+sp.fill+'"/><bgColor indexed="64"/></patternFill></fill>':null;
-  var fid=ix(fonts,fo),fl=fi?ix(fills,fi):0,bd=sp.bd?1:0,nid=0;
+  var fid=ix(fonts,fo),fl=fi?ix(fills,fi):0,bd=sp.bd?(sp.bd===2?2:1):0,nid=0;
   if(sp.nf){var j=nfs.indexOf(sp.nf);if(j<0){nfs.push(sp.nf);j=nfs.length-1}nid=164+j}
   var al=(sp.h||sp.v)?'<alignment'+(sp.h?' horizontal="'+sp.h+'"':'')+(sp.v?' vertical="'+sp.v+'"':'')+'/>':'';
   xfs.push('<xf numFmtId="'+nid+'" fontId="'+fid+'" fillId="'+fl+'" borderId="'+bd+'" xfId="0" applyFont="1"'+(fl?' applyFill="1"':'')+(bd?' applyBorder="1"':'')+(nid?' applyNumberFormat="1"':'')+(al?' applyAlignment="1">'+al+'</xf>':'/>'));
@@ -1624,6 +1624,77 @@ function exportForm(){
  unduh(rakitXlsx(ys.map(function(y){return "FORM TAB OKSI "+y}),sh,R.xml()),"TABUNG_OKSIGEN_GUDANG_MANIKA.xlsx");
  show("imsg","Export selesai: "+items.length+" tabung dalam "+ys.length+" sheet (per tahun diterima).");
 }
+
+function sheetLap(tahun,xs,R){
+ var rows={},hts={},merges=[];
+ function put(r,c,v,sp){(rows[r]||(rows[r]={}))[c]={v:v,s:R.get(sp||{})}}
+ function merge(r1,c1,r2,c2,sp){for(var r=r1;r<=r2;r++)for(var c=c1;c<=c2;c++)if(!(r===r1&&c===c1))put(r,c,null,sp);merges.push(kol(c1)+r1+":"+kol(c2)+r2)}
+ var DATE="[$-409]d\\-mmm\\-yy;@",RED="FFFF0000",BLK="FF000000",YEL="FFFFFFCC",
+ H1={sz:14,b:1,bd:2,h:"center",v:"bottom"},H1s={sz:10,b:1,bd:2,h:"center",v:"bottom"},H2={sz:12,b:1,bd:2,h:"center",v:"bottom"};
+ function st(j,red,nf){var o={sz:14,bd:1,h:"center",v:"center",col:red?RED:BLK};if(j%2)o.fill=YEL;if(nf)o.nf=nf;return o}
+ var g={},ord=[];
+ xs.forEach(function(x){var k=(x.diterima||"")+"|"+U(x.supplier)+"|"+U(x.no_sj);if(!g[k]){g[k]=[];ord.push(k)}g[k].push(x)});
+ var cmp=new Intl.Collator("id",{numeric:true});
+ ord.sort(function(a,b){var A=g[a][0],B=g[b][0];return (A.diterima||"")<(B.diterima||"")?-1:(A.diterima||"")>(B.diterima||"")?1:cmp.compare(A.no_sj||"",B.no_sj||"")});
+ var r=3;hts[2]=15.75;
+ ord.forEach(function(k){
+  var ts=g[k].slice().sort(function(a,b){return cmp.compare(ef(a).n,ef(b).n)});
+  for(var off=0;off<ts.length;off+=20){
+   var cs=ts.slice(off,off+20),n=cs.length;
+   put(r,0,"NO",H1);put(r+1,0,null,H1);
+   put(r,1,"MASUK DARI SUPLIER  ( TABUNG ISI )",H1);merge(r,1,r,5,H1);
+   put(r,7,"KELUAR UNTUK PROYEK ( TABUNG ISI )",H1);merge(r,7,r,11,H1);
+   put(r,12,"SISA STOK",H1s);
+   put(r,14,"MASUK DARI PROYEK  ( TABUNG KOSONG )",H1);merge(r,14,r,18,H1);
+   put(r,20,"PENGEMBALIAN TABUNG KOSONG KE SUPLIER",H1);merge(r,20,r,24,H1);
+   [[1,"TANGGAL"],[2,"NO SJ"],[3,"NAMA PENGIRIM"],[4,"NO TABUNG"],[5,"JUM"],[7,"TANGGAL"],[8,"NO SPK"],[9,"NO IPB"],[10,"PENGAMBIL"],[11,"JUM"],[12,"TAB ISI"],[14,"TANGGAL"],[15,"NO SPK"],[16,"NO STT"],[17,"PENGANTAR"],[18,"JUM"],[20,"TANGGAL"],[21,"NO STT SUP"],[22,"PENERIMA"],[23,"NO TABUNG"],[24,"JUM"]].forEach(function(h){put(r+1,h[0],h[1],H2)});
+   hts[r]=19.5;hts[r+1]=19.5;
+   var r1=r+2;
+   cs.forEach(function(x,j){
+    var q=r1+j,e=ef(x),out=x.status!=="gudang",ko=x.status==="kosong"||!!x.tgl_kosong,kb=x.status==="kembali";
+    hts[q]=19.5;
+    put(q,0,j===0?1:{f:"A"+(q-1)+"+1"},st(j,0));
+    if(j===0){var sj=nn(x.no_sj,9);
+     put(q,1,serTgl(x.diterima),st(0,0,DATE));put(q,2,x.no_sj?(sj!=null?sj:x.no_sj):null,st(0,0));put(q,3,x.supplier||null,st(0,0))}
+    else{put(q,1,null,st(0,0,DATE));put(q,2,null,st(0,0));put(q,3,null,st(0,0))}
+    var nt=nn(e.n,12);put(q,4,nt!=null?nt:e.n,st(j,1,nt!=null?"00000":null));put(q,5,1,st(j,1));
+    put(q,7,serTgl(out?x.tgl_keluar:""),st(j,1,DATE));
+    var spk=nn(x.spk,9);put(q,8,out&&x.spk?(spk!=null?spk:x.spk):null,st(j,1));
+    var ip=nn(x.no_ipb,9);put(q,9,out&&x.no_ipb?(ip!=null?ip:x.no_ipb):null,st(j,1,ip!=null?"000":null));
+    put(q,10,out?(x.pengambil||null):null,st(j,1));
+    put(q,11,out?1:null,st(j,1));
+    put(q,12,{f:"F"+q+"-L"+q},st(j,1));
+    put(q,14,serTgl(x.tgl_kosong),st(j,1,DATE));
+    var spk2=nn(x.spk,9);put(q,15,ko&&x.spk?(spk2!=null?spk2:x.spk):null,st(j,1));
+    var stt=nn(x.no_stt,9);put(q,16,ko&&x.no_stt?(stt!=null?stt:x.no_stt):null,st(j,1));
+    put(q,17,ko?(x.pengantar||null):null,st(j,1));
+    put(q,18,ko?1:null,st(j,1));
+    put(q,20,serTgl(x.kembali),st(j,1,DATE));
+    var sts=nn(x.no_stt_sup,9);put(q,21,kb&&x.no_stt_sup?(sts!=null?sts:x.no_stt_sup):null,st(j,1,sts!=null?"000000":null));
+    put(q,22,kb?(x.penerima||null):null,st(j,1));
+    put(q,23,kb?(nt!=null?nt:e.n):null,st(j,1,nt!=null?"00000":null));
+    put(q,24,kb?1:null,st(j,1));
+   });
+   var r2=r1+n-1;
+   if(n>1){merge(r1,1,r2,1,st(0,0,DATE));merge(r1,2,r2,2,st(0,0));merge(r1,3,r2,3,st(0,0))}
+   hts[r2+1]=15.75;r=r2+2;
+  }
+ });
+ var W=[6.85,14.41,9.99,22.56,20.28,13,2.84,15.7,14.99,10.99,16.84,7.85,13,2.13,13.41,10.71,12.14,14.41,9.85,1.99,16.56,13.7,16.56,15.7,7.7];
+ var x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>'+W.map(function(w,i){return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'}).join("")+'</cols><sheetData>';
+ Object.keys(rows).map(Number).sort(function(a,b){return a-b}).forEach(function(rr){
+  var cs=rows[rr];x+='<row r="'+rr+'"'+(hts[rr]?' ht="'+hts[rr]+'" customHeight="1"':'')+'>';
+  Object.keys(cs).map(Number).sort(function(a,b){return a-b}).forEach(function(cc){
+   var c=cs[cc],ref=kol(cc)+rr,v=c.v;
+   if(v==null)x+='<c r="'+ref+'" s="'+c.s+'"/>';
+   else if(typeof v==="number")x+='<c r="'+ref+'" s="'+c.s+'"><v>'+v+'</v></c>';
+   else if(typeof v==="object")x+='<c r="'+ref+'" s="'+c.s+'"><f>'+xe(v.f)+'</f></c>';
+   else x+='<c r="'+ref+'" s="'+c.s+'" t="inlineStr"><is><t xml:space="preserve">'+xe(v)+'</t></is></c>'});
+  x+='</row>'});
+ x+='</sheetData><mergeCells count="'+merges.length+'">'+merges.map(function(m){return '<mergeCell ref="'+m+'"/>'}).join("")+'</mergeCells><pageMargins left="0.32" right="0.32" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="5" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>';
+ return x;
+}
+function laporanXlsx(thn,xs){var R=new StyleReg(),sh=sheetLap(thn,xs,R);return rakitXlsx(["FORM TAB OKSI "+thn],[sh],R.xml())}
 $("t1").onclick=function(){tab="aktif";flt="";render()};
 function statTap(f){
  if(f==="kembali"){tab="riwayat";flt=""}
@@ -1897,11 +1968,11 @@ function lap(thn){
  });
  return xs.length?h:h+'<p>Tidak ada data untuk tahun ini.</p>';
 }
-document.body.insertAdjacentHTML("beforeend",'<div id="rpt"></div><dialog id="dlg9"><h2>Cetak laporan</h2><label for="lth">Tahun (menurut tanggal diterima)</label><select id="lth"></select><p class="note">Format sama dengan Excel. Di jendela cetak pilih kertas Legal, lanskap, atau Simpan sebagai PDF.</p><div class="acts" style="margin-top:18px;justify-content:flex-end"><button id="lbat"><span>Batal</span></button><button class="p" id="lcet"><span>Cetak</span></button></div></dialog>');
+document.body.insertAdjacentHTML("beforeend",'<div id="rpt"></div><dialog id="dlg9"><h2>Cetak laporan</h2><label for="lth">Tahun (menurut tanggal diterima)</label><select id="lth"></select><p class="note">Laporan diunduh sebagai file Excel (.xlsx), format sama dengan form Excel. Kertas Legal, lanskap.</p><p class="note" id="lerr" style="display:none;color:#dc2626"></p><div class="acts" style="margin-top:18px;justify-content:flex-end"><button id="lbat"><span>Batal</span></button><button class="p" id="lcet"><span>Unduh Excel</span></button></div></dialog>');
 $("lacak").insertAdjacentHTML("afterend",'<button id="cetak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span>Cetak laporan</span></button>');
-$("cetak").onclick=function(){var ys={},y=String(new Date().getFullYear());ys[y]=1;items.forEach(function(x){if(x.diterima)ys[x.diterima.slice(0,4)]=1});$("lth").innerHTML=Object.keys(ys).sort().reverse().map(function(v){return '<option>'+v+'</option>'}).join("");$("dlg9").showModal()};
+$("cetak").onclick=function(){show("lerr","");var ys={},y=String(new Date().getFullYear());ys[y]=1;items.forEach(function(x){if(x.diterima)ys[x.diterima.slice(0,4)]=1});$("lth").innerHTML=Object.keys(ys).sort().reverse().map(function(v){return '<option>'+v+'</option>'}).join("");$("dlg9").showModal()};
 $("lbat").onclick=function(){$("dlg9").close()};
-$("lcet").onclick=function(){var th=$("lth").value,jd=document.title;$("rpt").innerHTML=lap(th);$("dlg9").close();document.title="Laporan Tabung "+th;var pulih=function(){document.title=jd;window.removeEventListener("afterprint",pulih)};window.addEventListener("afterprint",pulih);setTimeout(function(){window.print();setTimeout(function(){if(document.title!==jd&&!window.matchMedia("print").matches)pulih()},1500)},150)};
+$("lcet").onclick=function(){var th=$("lth").value,xs=items.filter(function(x){return (x.diterima||"").slice(0,4)===th});if(!xs.length)return show("lerr","Tidak ada data untuk tahun "+th+".");show("lerr","");unduh(laporanXlsx(th,xs),"LAPORAN_TABUNG_OKSIGEN_"+th+".xlsx");$("dlg9").close()};
 $("kbat").onclick=function(){$("dlg8").close()};
 $("ksim").onclick=function(){if(!$("ktgl").value)return show("kerr","Isi tanggal masuk dari proyek.");cur.status="kosong";cur.tgl_kosong=$("ktgl").value;cur.no_stt=$("stt").value.trim();cur.pengantar=$("png").value.trim();save(cur);$("dlg8").close();render()};
 
